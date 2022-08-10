@@ -39,6 +39,12 @@ AllowCommaDecimalSeparator: auto
 # Most useful on larger servers with many signs
 CachePrices: true
 
+# How the plugin should store shop data
+# flatfile         : Store the data in sellers.yml
+# internal_database: Store the data in an internal SQL database
+# external_database: Store the data in an external SQL database
+DataSource: flatfile
+
 #----------- Tools ------------------
 
 # Item names (https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html)

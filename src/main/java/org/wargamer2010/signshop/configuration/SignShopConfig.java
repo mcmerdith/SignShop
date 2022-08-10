@@ -41,6 +41,7 @@ public class SignShopConfig {
     //Configurables
     private static FileConfiguration config;
     private static int ConfigVersionDoNotTouch = 3;
+    private static DataSourceType DataSource;
     private static int MaxSellDistance = 0;
     private static int MaxShopsPerPerson = 0;
     private static int ShopCooldown = 0;
@@ -217,6 +218,7 @@ public class SignShopConfig {
         configUtil.loadYMLFromJar(ymlThing, configFilename);
 
         ConfigVersionDoNotTouch = ymlThing.getInt("ConfigVersionDoNotTouch", ConfigVersionDoNotTouch);
+        DataSource = DataSourceType.fromConfigValue(ymlThing.getString("DataSource", DataSourceType.FLATFILE.configValue()));
         MaxSellDistance = ymlThing.getInt("MaxSellDistance", MaxSellDistance);
         TransactionLog = ymlThing.getBoolean("TransactionLog", TransactionLog);
         Debugging = ymlThing.getBoolean("Debugging", Debugging);
@@ -703,6 +705,35 @@ public class SignShopConfig {
 
     public static int getConfigVersionDoNotTouch() {
         return ConfigVersionDoNotTouch;
+    }
+
+    public enum DataSourceType {
+        FLATFILE("flatfile"),
+        INTERNAL_DB("internal_database"),
+        EXTERNAL_DB("external_database");
+
+        private final String configValue;
+        public String configValue() {
+            return configValue;
+        }
+
+        public static DataSourceType fromConfigValue(String configValue) {
+            for (DataSourceType type : values()) {
+                if (type.configValue().equalsIgnoreCase(configValue)) {
+                    return type;
+                }
+            }
+
+            return null;
+        }
+
+        DataSourceType(String configValue) {
+            this.configValue = configValue;
+        }
+    }
+
+    public static DataSourceType getDataSource() {
+        return DataSource;
     }
 
     public static int getMaxSellDistance() {
