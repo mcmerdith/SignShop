@@ -18,7 +18,7 @@ import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.Vault;
 import org.wargamer2010.signshop.configuration.LinkableMaterial;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 import org.wargamer2010.signshop.events.*;
 import org.wargamer2010.signshop.operations.SignShopArguments;
 import org.wargamer2010.signshop.operations.SignShopOperation;
@@ -509,11 +509,11 @@ public class signshopUtil {
     }
 
     private static List<Seller> getShopsFromMiscSetting(String miscname, Block pBlock) {
-        List<Block> shopsWithBlockInMisc = Storage.get().getShopsWithMiscSetting(miscname, signshopUtil.convertLocationToString(pBlock.getLocation()));
+        List<Block> shopsWithBlockInMisc = FlatfileStorage.get().getShopsWithMiscSetting(miscname, signshopUtil.convertLocationToString(pBlock.getLocation()));
         List<Seller> sellers = new LinkedList<>();
         if(!shopsWithBlockInMisc.isEmpty()) {
             for(Block block : shopsWithBlockInMisc) {
-                sellers.add(Storage.get().getSeller(block.getLocation()));
+                sellers.add(FlatfileStorage.get().getSeller(block.getLocation()));
             }
         }
         return sellers;
@@ -522,15 +522,15 @@ public class signshopUtil {
     public static Map<Seller, SSDestroyedEventType> getRelatedShopsByBlock(Block block) {
         Map<Seller, SSDestroyedEventType> affectedSellers = new LinkedHashMap<>();
 
-        if(Storage.get().getSeller(block.getLocation()) != null)
-            affectedSellers.put(Storage.get().getSeller(block.getLocation()), SSDestroyedEventType.sign);
+        if(FlatfileStorage.get().getSeller(block.getLocation()) != null)
+            affectedSellers.put(FlatfileStorage.get().getSeller(block.getLocation()), SSDestroyedEventType.sign);
         if(itemUtil.clickedSign(block)) {
             for(Seller seller : getShopsFromMiscSetting("sharesigns", block))
                 affectedSellers.put(seller, SSDestroyedEventType.miscblock);
             for(Seller seller : getShopsFromMiscSetting("restrictedsigns", block))
                 affectedSellers.put(seller, SSDestroyedEventType.miscblock);
         }
-        for(Seller seller : Storage.get().getShopsByBlock(block))
+        for(Seller seller : FlatfileStorage.get().getShopsByBlock(block))
             affectedSellers.put(seller, SSDestroyedEventType.attachable);
 
         return affectedSellers;

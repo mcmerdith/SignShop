@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 import org.wargamer2010.signshop.util.itemUtil;
 import org.wargamer2010.signshop.util.signshopUtil;
@@ -22,7 +22,7 @@ public class LinkSpecialSign implements SignShopSpecialOp {
             return false;
         Player player = event.getPlayer();
         SignShopPlayer ssPlayer = new SignShopPlayer(player);
-        Seller seller = Storage.get().getSeller(shopSign.getLocation());
+        Seller seller = FlatfileStorage.get().getSeller(shopSign.getLocation());
         String sOperation = signshopUtil.getOperation(((Sign)shopSign.getState()).getLine(0));
         if(seller == null)
             return false;
@@ -78,7 +78,7 @@ public class LinkSpecialSign implements SignShopSpecialOp {
             return false;
         else if(newSigns.isEmpty()) {
             seller.removeMisc(MiscSetting);
-            Storage.get().Save();
+            FlatfileStorage.get().Save();
             return true;
         }
         newSigns.addAll(currentSigns);
@@ -103,7 +103,7 @@ public class LinkSpecialSign implements SignShopSpecialOp {
         else {
             ssPlayer.sendMessage(SignShopConfig.getError(LinkedMessage, null));
             seller.addMisc(MiscSetting, locations);
-            Storage.get().Save();
+            FlatfileStorage.get().Save();
         }
 
         return true;

@@ -17,7 +17,7 @@ import org.wargamer2010.signshop.blocks.SignShopItemMeta;
 import org.wargamer2010.signshop.commands.*;
 import org.wargamer2010.signshop.configuration.ColorUtil;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 import org.wargamer2010.signshop.configuration.configUtil;
 import org.wargamer2010.signshop.listeners.SignShopBlockListener;
 import org.wargamer2010.signshop.listeners.SignShopLoginListener;
@@ -48,7 +48,7 @@ public class SignShop extends JavaPlugin {
     public static WorthHandler worthHandler;
     private static SignShop instance;
     //Statics
-    private static Storage store;
+    private static FlatfileStorage store;
     private static TimeManager manager = null;
     //Permissions
     private static boolean USE_PERMISSIONS = false;
@@ -150,7 +150,7 @@ public class SignShop extends JavaPlugin {
         DataConverter.init();
 
         //Create a storage locker for shops
-        store = Storage.init(new File(this.getDataFolder(), "sellers.yml"));
+        store = FlatfileStorage.init(new File(this.getDataFolder(), "sellers.yml"));
         manager = new TimeManager(new File(this.getDataFolder(), "timing.yml"));
 
         if (SignShopConfig.allowCommaDecimalSeparator() == SignShopConfig.CommaDecimalSeparatorState.AUTO) {
@@ -259,7 +259,7 @@ public class SignShop extends JavaPlugin {
         closeHandlers();
         if (store != null)
             store.Save();
-        Storage.dispose();
+        FlatfileStorage.dispose();
         if (manager != null)
             manager.stop();
         log("Disabled", Level.INFO);

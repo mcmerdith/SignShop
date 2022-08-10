@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.util.FileUtil;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.blocks.*;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 
 import java.io.File;
 import java.io.IOException;
@@ -124,17 +124,17 @@ public class DataConverter {
 
         for (int i = 0; i < itemStringList.size(); i++) {
             try {
-                String[] itemProperties = itemStringList.get(i).split(Storage.getItemSeperator());
+                String[] itemProperties = itemStringList.get(i).split(FlatfileStorage.getItemSeperator());
                 if (itemProperties.length < 4) {
                     invalidItems++;
                     continue;
                 }
 
                 if (itemProperties.length <= 7) {
-                    if (i < (itemStringList.size() - 1) && itemStringList.get(i + 1).split(Storage.getItemSeperator()).length < 4) {
+                    if (i < (itemStringList.size() - 1) && itemStringList.get(i + 1).split(FlatfileStorage.getItemSeperator()).length < 4) {
                         // Bug detected, the next item will be the base64 string belonging to the current item
                         // This bug will be fixed at the next save as the ~ will be replaced with a |
-                        itemProperties = (itemStringList.get(i) + "|" + itemStringList.get(i + 1)).split(Storage.getItemSeperator());
+                        itemProperties = (itemStringList.get(i) + "|" + itemStringList.get(i + 1)).split(FlatfileStorage.getItemSeperator());
                     }
                 }
 
@@ -222,13 +222,13 @@ public class DataConverter {
                 itemStringList.add(BukkitSerialization.itemStackArrayToBase64(stacks));
 
                 //noinspection deprecation
-                itemStringList.add((currentItemStack.getAmount() + Storage.getItemSeperator()
-                        + currentItemStack.getType() + Storage.getItemSeperator()
-                        + ((Damageable) currentItemStack.getItemMeta()).getDamage() + Storage.getItemSeperator()
-                        + currentItemStack.getData().getData() + Storage.getItemSeperator()
-                        + signshopUtil.convertEnchantmentsToString(currentItemStack.getEnchantments()) + Storage.getItemSeperator()
-                        + ID + Storage.getItemSeperator()
-                        + metaID + Storage.getItemSeperator()
+                itemStringList.add((currentItemStack.getAmount() + FlatfileStorage.getItemSeperator()
+                        + currentItemStack.getType() + FlatfileStorage.getItemSeperator()
+                        + ((Damageable) currentItemStack.getItemMeta()).getDamage() + FlatfileStorage.getItemSeperator()
+                        + currentItemStack.getData().getData() + FlatfileStorage.getItemSeperator()
+                        + signshopUtil.convertEnchantmentsToString(currentItemStack.getEnchantments()) + FlatfileStorage.getItemSeperator()
+                        + ID + FlatfileStorage.getItemSeperator()
+                        + metaID + FlatfileStorage.getItemSeperator()
                         + "|" + BukkitSerialization.itemStackArrayToBase64(stacks)));
             }
 

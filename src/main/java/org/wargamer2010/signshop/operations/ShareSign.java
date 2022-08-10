@@ -5,7 +5,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 import org.wargamer2010.signshop.util.signshopUtil;
 
 import java.util.LinkedList;
@@ -14,10 +14,10 @@ import java.util.List;
 public class ShareSign implements SignShopOperation {
     @Override
     public Boolean setupOperation(SignShopArguments ssArgs) {
-        List<Block> shops = Storage.get().getShopsWithMiscSetting("sharesigns", signshopUtil.convertLocationToString(ssArgs.getSign().get().getLocation()));
+        List<Block> shops = FlatfileStorage.get().getShopsWithMiscSetting("sharesigns", signshopUtil.convertLocationToString(ssArgs.getSign().get().getLocation()));
         if(!shops.isEmpty()) {
             for(Block bTemp : shops) {
-                Seller seller = Storage.get().getSeller(bTemp.getLocation());
+                Seller seller = FlatfileStorage.get().getSeller(bTemp.getLocation());
                 if(seller != null && seller.hasMisc("sharesigns")) {
                     if(signshopUtil.validateShareSign(signshopUtil.getSignsFromMisc(seller, "sharesigns"), ssArgs.getPlayer().get()).isEmpty())
                         return false;
@@ -34,7 +34,7 @@ public class ShareSign implements SignShopOperation {
     @SuppressWarnings("DuplicateCondition")
     @Override
     public Boolean checkRequirements(SignShopArguments ssArgs, Boolean activeCheck) {
-        List<Block> shops = Storage.get().getShopsWithMiscSetting("sharesigns", signshopUtil.convertLocationToString(ssArgs.getSign().get().getLocation()));
+        List<Block> shops = FlatfileStorage.get().getShopsWithMiscSetting("sharesigns", signshopUtil.convertLocationToString(ssArgs.getSign().get().getLocation()));
         if(shops.isEmpty()) {
             ssArgs.getPlayer().get().sendMessage(SignShopConfig.getError("no_shop_linked_to_sharesign", null));
         } else {
