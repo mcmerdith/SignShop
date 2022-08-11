@@ -22,7 +22,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 import org.wargamer2010.signshop.events.*;
 import org.wargamer2010.signshop.operations.SignShopArguments;
 import org.wargamer2010.signshop.operations.SignShopArgumentsType;
@@ -74,8 +74,8 @@ public class SignShopPlayerListener implements Listener {
         if(itemUtil.clickedSign(block)) {
             Location location = block.getLocation();
 
-            if(Storage.get().getSeller(location) != null) {
-                Storage.get().removeSeller(location);
+            if(FlatfileStorage.get().getSeller(location) != null) {
+                FlatfileStorage.get().removeSeller(location);
             }
         }
     }
@@ -168,7 +168,7 @@ public class SignShopPlayerListener implements Listener {
         String[] sLines;
         String sOperation;
         World world = player.getWorld();
-        Seller seller = Storage.get().getSeller(event.getClickedBlock().getLocation());
+        Seller seller = FlatfileStorage.get().getSeller(event.getClickedBlock().getLocation());
 
         if(event.getAction() == Action.LEFT_CLICK_BLOCK && event.getItem() != null && seller == null && SignShopConfig.isOPMaterial(event.getItem().getType())) {
             if(itemUtil.clickedSign(bClicked) && event.getItem().getType() == SignShopConfig.getLinkMaterial()) {
@@ -221,7 +221,7 @@ public class SignShopPlayerListener implements Listener {
                 }
 
 
-                Storage.get().addSeller(ssPlayer.GetIdentifier(), world.getName(), ssArgs.getSign().get(), ssArgs.getContainables().getRoot(), ssArgs.getActivatables().getRoot()
+                FlatfileStorage.get().addSeller(ssPlayer.GetIdentifier(), world.getName(), ssArgs.getSign().get(), ssArgs.getContainables().getRoot(), ssArgs.getActivatables().getRoot()
                                             , ssArgs.getItems().get(), createdevent.getMiscSettings());
                 if(!ssArgs.bDoNotClearClickmap)
                     clicks.removePlayerFromClickmap(player);
@@ -338,7 +338,7 @@ public class SignShopPlayerListener implements Listener {
                 signshopUtil.registerClickedMaterial(event);
             }
         }
-        List<Seller> touchedShops = Storage.get().getShopsByBlock(bClicked);
+        List<Seller> touchedShops = FlatfileStorage.get().getShopsByBlock(bClicked);
         if(!touchedShops.isEmpty()) {
             SignShopPlayer ssPlayer = PlayerCache.getPlayer(player);
             for(Seller shop : touchedShops) {

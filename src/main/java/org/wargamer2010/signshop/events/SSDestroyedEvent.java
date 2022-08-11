@@ -4,7 +4,7 @@ import org.bukkit.block.Block;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.wargamer2010.signshop.Seller;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 
 public class SSDestroyedEvent extends SSEvent {
@@ -24,7 +24,7 @@ public class SSDestroyedEvent extends SSEvent {
         if(pShop != null)
             seShop = pShop;
         else if(pReason == SSDestroyedEventType.sign)
-            seShop = Storage.get().getSeller(pBlock.getLocation());
+            seShop = FlatfileStorage.get().getSeller(pBlock.getLocation());
         reason = pReason;
     }
 

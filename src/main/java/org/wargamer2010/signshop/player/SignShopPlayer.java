@@ -8,7 +8,7 @@ import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.Vault;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
+import org.wargamer2010.signshop.configuration.FlatfileStorage;
 import org.wargamer2010.signshop.util.itemUtil;
 
 import java.util.LinkedHashMap;
@@ -343,7 +343,7 @@ public class SignShopPlayer {
             return 0;
 
         String[] sGroups = getPlayerGroups();
-        int iShopAmount = Storage.get().countLocations(this);
+        int iShopAmount = FlatfileStorage.get().countLocations(this);
 
         if (SignShopConfig.getMaxShopsPerPerson() != 0 && iShopAmount >= SignShopConfig.getMaxShopsPerPerson())
             return SignShopConfig.getMaxShopsPerPerson();
