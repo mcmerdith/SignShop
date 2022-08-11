@@ -41,12 +41,14 @@ public class FlatfileStorage extends Storage implements Listener {
 
     private final Map<String, HashMap<String, List<String>>> invalidShops = new LinkedHashMap<>();
 
-    private FlatfileStorage(File ymlFile) {
+    public FlatfileStorage() {
+        File ymlFile = new File(SignShop.getInstance().getDataFolder(), "sellers.yml");
+
         fileSaveWorker = new FileSaveWorker(ymlFile);
         if(!ymlFile.exists()) {
             try {
                 ymlFile.createNewFile();
-                Save();
+                save();
             } catch(IOException ex) {
                 SignShop.log("Could not create sellers.yml", Level.WARNING);
             }
@@ -55,7 +57,7 @@ public class FlatfileStorage extends Storage implements Listener {
         sellers = new HashMap<>();
 
         // Load into memory, this also removes invalid signs (hence the backup)
-        Boolean needToSave = Load();
+        Boolean needToSave = load();
 
         if(needToSave) {
             File backupTo = new File(ymlFile.getPath()+".bak");
@@ -288,48 +290,38 @@ public class FlatfileStorage extends Storage implements Listener {
             this.save();
     }
 
-    public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables) {
-        updateSeller(bSign, containables, activatables, null);
-    }
-
+    @Override
     public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables, ItemStack[] isItems) {
-        Seller seller = FlatfileStorage.sellers.get(bSign.getLocation());
+        Seller seller = sellers.get(bSign.getLocation());
         seller.setActivatables(activatables);
         seller.setContainables(containables);
         if (isItems != null) seller.setItems(isItems);
     }
 
+    @Override
     public Seller getSeller(Location lKey){
-        if(FlatfileStorage.sellers.containsKey(lKey))
-            return FlatfileStorage.sellers.get(lKey);
+        if(sellers.containsKey(lKey))
+            return sellers.get(lKey);
         return null;
     }
 
+    @Override
     public Collection<Seller> getSellers() {
         return Collections.unmodifiableCollection(sellers.values());
     }
 
-    /**
-     * The Seller now keeps its own Sign Location so call getSign in stead
-     * @param pSeller
-     * @return
-     * @deprecated
-     */
-    @Deprecated
-    public Block getSignFromSeller(Seller pSeller) {
-        return pSeller.getSign();
-    }
-
+    @Override
     public void removeSeller(Location lKey) {
-        if(FlatfileStorage.sellers.containsKey(lKey)){
-            FlatfileStorage.sellers.remove(lKey);
-            this.Save();
+        if(sellers.containsKey(lKey)){
+            sellers.remove(lKey);
+            this.save();
         }
     }
 
-    public Integer countLocations(SignShopPlayer player) {
-        Integer count = 0;
-        for(Map.Entry<Location, Seller> entry : FlatfileStorage.sellers.entrySet())
+    @Override
+    public int countLocations(SignShopPlayer player) {
+        int count = 0;
+        for(Map.Entry<Location, Seller> entry : sellers.entrySet())
             if(entry.getValue().isOwner(player)) {
                 Block bSign = Bukkit.getServer().getWorld(entry.getValue().getWorld()).getBlockAt(entry.getKey());
                 if(itemUtil.clickedSign(bSign)) {
@@ -345,6 +337,7 @@ public class FlatfileStorage extends Storage implements Listener {
         return count;
     }
 
+    @Override
     public List<Block> getSignsFromHolder(Block bHolder) {
         List<Block> signs = new LinkedList<>();
         for(Map.Entry<Location, Seller> entry : sellers.entrySet())
@@ -352,6 +345,7 @@ public class FlatfileStorage extends Storage implements Listener {
                 signs.add(Bukkit.getServer().getWorld(entry.getValue().getWorld()).getBlockAt(entry.getKey()));
         return signs;
     }
+
 
     public List<Seller> getShopsByBlock(Block bBlock) {
         List<Seller> tempsellers = new LinkedList<>();
@@ -372,7 +366,7 @@ public class FlatfileStorage extends Storage implements Listener {
         return shops;
     }
 
-    public String getItemSeperator() {
+    public static String getItemSeperator() {
         return itemSeperator;
     }
 
