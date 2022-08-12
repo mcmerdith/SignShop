@@ -132,3 +132,5 @@ $RECYCLE.BIN/
 
 # End of https://www.gitignore.io/api/java,windows,intellij
 /target/
+/dependency-reduced-pom.xml
+/ParserCacheTest*.csv
