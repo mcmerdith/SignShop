@@ -15,7 +15,7 @@ import org.dynmap.markers.MarkerSet;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.events.SSCreatedEvent;
 import org.wargamer2010.signshop.events.SSDestroyedEvent;
 import org.wargamer2010.signshop.events.SSDestroyedEventType;
@@ -94,7 +94,7 @@ public class DynmapManager implements Listener {
         if(mi == null)
             mi = markerAPI.getMarkerIcon("sign");
 
-        for(Seller seller : FlatfileStorage.get().getSellers()) {
+        for(Seller seller : Storage.get().getSellers()) {
             ManageMarkerForSeller(seller, false);
         }
     }

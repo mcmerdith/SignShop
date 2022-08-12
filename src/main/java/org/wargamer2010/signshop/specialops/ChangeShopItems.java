@@ -7,7 +7,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.events.SSCreatedEvent;
 import org.wargamer2010.signshop.events.SSEventFactory;
 import org.wargamer2010.signshop.operations.SignShopArguments;
@@ -30,7 +30,7 @@ public class ChangeShopItems implements SignShopSpecialOp {
         Player player = event.getPlayer();
         SignShopPlayer ssPlayer = new SignShopPlayer(player);
         Block bClicked = event.getClickedBlock();
-        Seller seller = FlatfileStorage.get().getSeller(bClicked.getLocation());
+        Seller seller = Storage.get().getSeller(bClicked.getLocation());
         String sOperation = signshopUtil.getOperation(((Sign) bClicked.getState()).getLine(0));
         if(seller == null)
             return false;
@@ -88,7 +88,7 @@ public class ChangeShopItems implements SignShopSpecialOp {
             return true;
         }
 
-        FlatfileStorage.get().updateSeller(bClicked, seller.getContainables(), seller.getActivatables(), ssArgs.getItems().get());
+        Storage.get().updateSeller(bClicked, seller.getContainables(), seller.getActivatables(), ssArgs.getItems().get());
 
         if (!ssArgs.bDoNotClearClickmap) {
             clicks.removePlayerFromClickmap(player);

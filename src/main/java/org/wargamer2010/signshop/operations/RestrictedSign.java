@@ -3,7 +3,7 @@ package org.wargamer2010.signshop.operations;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.util.signshopUtil;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class RestrictedSign implements SignShopOperation {
 
     @Override
     public Boolean checkRequirements(SignShopArguments ssArgs, Boolean activeCheck) {
-        List<Block> shops = FlatfileStorage.get().getShopsWithMiscSetting("restrictedsigns", signshopUtil.convertLocationToString(ssArgs.getSign().get().getLocation()));
+        List<Block> shops = Storage.get().getShopsWithMiscSetting("restrictedsigns", signshopUtil.convertLocationToString(ssArgs.getSign().get().getLocation()));
         if(shops.isEmpty()) {
             ssArgs.getPlayer().get().sendMessage(SignShopConfig.getError("no_shop_linked_to_restrictedsign", null));
         } else {

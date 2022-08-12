@@ -5,7 +5,7 @@ package org.wargamer2010.signshop.events;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.Action;
 import org.wargamer2010.signshop.Seller;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.operations.SignShopArguments;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 import org.wargamer2010.signshop.timing.IExpirable;
@@ -76,7 +76,7 @@ public class SSEventFactory {
 
     public static SSMoneyTransactionEvent generateMoneyEvent(SignShopArguments ssArgs, SSMoneyEventType type, SSMoneyRequestType pRequestType) {
         SSMoneyTransactionEvent event = new SSMoneyTransactionEvent(ssArgs.getPlayer().get(),
-                                            FlatfileStorage.get().getSeller(ssArgs.getSign().get().getLocation()),
+                                            Storage.get().getSeller(ssArgs.getSign().get().getLocation()),
                                             ssArgs.getPrice().get(),
                                             ssArgs.getSign().get(),
                                             ssArgs.getOperation().get(),

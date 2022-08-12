@@ -14,7 +14,7 @@ import org.bukkit.event.block.Action;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.events.SSCreatedEvent;
 import org.wargamer2010.signshop.events.SSDestroyedEvent;
 import org.wargamer2010.signshop.events.SSDestroyedEventType;
@@ -37,23 +37,23 @@ public class SimpleShopProtector implements Listener {
     private Boolean canDestroy(Player player, Block bBlock) {
         SignShopPlayer ssPlayer = new SignShopPlayer(player);
         if(itemUtil.clickedSign(bBlock)) {
-            Seller seller = FlatfileStorage.get().getSeller(bBlock.getLocation());
+            Seller seller = Storage.get().getSeller(bBlock.getLocation());
             return seller == null || seller.isOwner(ssPlayer) || SignShopPlayer.isOp(player) || ssPlayer.hasPerm("Signshop.Destroy.Others", true)|| !SignShopConfig.getEnableShopOwnerProtection();
         }
         return true;
     }
 
     private void cleanUpMiscStuff(String miscname, Block block) {
-        List<Block> shopsWithSharesign = FlatfileStorage.get().getShopsWithMiscSetting(miscname, signshopUtil.convertLocationToString(block.getLocation()));
+        List<Block> shopsWithSharesign = Storage.get().getShopsWithMiscSetting(miscname, signshopUtil.convertLocationToString(block.getLocation()));
         for(Block bTemp : shopsWithSharesign) {
-            Seller seller = FlatfileStorage.get().getSeller(bTemp.getLocation());
+            Seller seller = Storage.get().getSeller(bTemp.getLocation());
             String temp = seller.getMisc(miscname);
             temp = temp.replace(signshopUtil.convertLocationToString(block.getLocation()), "");
-            temp = temp.replace(SignShopArguments.seperator+SignShopArguments.seperator, SignShopArguments.seperator);
+            temp = temp.replace(SignShopArguments.separator +SignShopArguments.separator, SignShopArguments.separator);
             if(temp.length() > 0) {
-                if(temp.endsWith(SignShopArguments.seperator))
+                if(temp.endsWith(SignShopArguments.separator))
                     temp = temp.substring(0, temp.length()-1);
-                if(temp.length() > 1 && temp.charAt(0) == SignShopArguments.seperator.charAt(0))
+                if(temp.length() > 1 && temp.charAt(0) == SignShopArguments.separator.charAt(0))
                     temp = temp.substring(1);
             }
             if(temp.length() == 0)
@@ -108,7 +108,7 @@ public class SimpleShopProtector implements Listener {
             return true;
         }
 
-        FlatfileStorage.get().updateSeller(seller.getSign(), containables, activatables);
+        Storage.get().updateSeller(seller.getSign(), containables, activatables);
         return false;
     }
 
@@ -153,7 +153,7 @@ public class SimpleShopProtector implements Listener {
         if(event.getReason() == SSDestroyedEventType.sign) {
             if(event.getShop() != null && event.getShop().getSign() != null)
                 itemUtil.setSignStatus(event.getShop().getSign(), ChatColor.BLACK);
-            FlatfileStorage.get().removeSeller(event.getBlock().getLocation());
+            Storage.get().removeSeller(event.getBlock().getLocation());
         } else if(event.getReason() == SSDestroyedEventType.miscblock) {
             cleanUpMiscStuff("sharesigns", event.getBlock());
             cleanUpMiscStuff("restrictedsigns", event.getBlock());
@@ -162,7 +162,7 @@ public class SimpleShopProtector implements Listener {
             if(isShopBrokenAfterBlockUnlink(event.getShop(), event.getBlock())) {
                 // Shop can not be updated without breaking functionality
                 itemUtil.setSignStatus(event.getShop().getSign(), ChatColor.BLACK);
-                FlatfileStorage.get().removeSeller(event.getShop().getSignLocation());
+                Storage.get().removeSeller(event.getShop().getSignLocation());
             }
         }
     }

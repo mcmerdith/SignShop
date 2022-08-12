@@ -5,7 +5,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Switch;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 
 public class lagSetter implements Runnable{
     private final Block blockToChange;
@@ -22,7 +22,7 @@ public class lagSetter implements Runnable{
             Switch switchLever = (Switch) blockToChange.getBlockData();
             switchLever.setPowered(false);
             blockToChange.setBlockData(switchLever);
-            for(Seller seller : FlatfileStorage.get().getShopsByBlock(blockToChange))
+            for(Seller seller : Storage.get().getShopsByBlock(blockToChange))
                 seller.reloadBlocks();
         }
     }

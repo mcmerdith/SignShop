@@ -8,7 +8,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.events.SSCreatedEvent;
 import org.wargamer2010.signshop.events.SSEventFactory;
 import org.wargamer2010.signshop.operations.SignShopArguments;
@@ -39,13 +39,13 @@ public class CopySign implements SignShopSpecialOp {
                 break;
             }
         }
-        if(signNewSign == null || FlatfileStorage.get().getSeller(signNewSign.getLocation()) != null)
+        if(signNewSign == null || Storage.get().getSeller(signNewSign.getLocation()) != null)
             return false;
 
         Sign signToChange = ((Sign) shopSign.getState());
         String[] sNewSign = signNewSign.getLines();
         String[] sToChange = signToChange.getLines().clone();
-        Seller seller = FlatfileStorage.get().getSeller(shopSign.getLocation());
+        Seller seller = Storage.get().getSeller(shopSign.getLocation());
         if(seller == null)
             return false;
         if((!seller.isOwner(ssPlayer) || !ssPlayer.hasPerm("SignShop.CopyPaste", true)) && !ssPlayer.hasPerm("SignShop.CopyPaste.Others", true)) {

@@ -7,7 +7,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.util.itemUtil;
 
 import java.util.ArrayList;
@@ -69,7 +69,7 @@ public class playJukebox implements SignShopOperation {
     @Override
     public Boolean runOperation(SignShopArguments ssArgs) {
         ItemStack[] isTotalItems = getRecords(ssArgs.getContainables().get());
-        Seller seller = FlatfileStorage.get().getSeller(ssArgs.getSign().get().getLocation());
+        Seller seller = Storage.get().getSeller(ssArgs.getSign().get().getLocation());
         String sLastrecord = seller.getVolatile("lastrecord");
         boolean doNext = false;
         int counter = 0;

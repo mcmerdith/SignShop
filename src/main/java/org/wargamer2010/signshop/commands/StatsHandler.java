@@ -8,7 +8,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.Vault;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 import org.wargamer2010.signshop.util.signshopUtil;
 
@@ -31,7 +31,7 @@ public class StatsHandler implements ICommandHandler {
             return true;
 
         PluginDescriptionFile pdfFile = SignShop.getInstance().getDescription();
-        String message = "Amount of Shops: " + FlatfileStorage.get().shopCount() + "\n"
+        String message = "Amount of Shops: " + Storage.get().shopCount() + "\n"
                 + "SignShop version: " + pdfFile.getVersion() + "\n";
 
         PluginManager manager = Bukkit.getPluginManager();

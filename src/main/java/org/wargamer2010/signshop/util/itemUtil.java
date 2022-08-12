@@ -18,7 +18,7 @@ import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.blocks.*;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.FlatfileStorage;
+import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.operations.SignShopArguments;
 import org.wargamer2010.signshop.operations.SignShopArgumentsType;
 import org.wargamer2010.signshop.operations.SignShopOperationListItem;
@@ -367,14 +367,14 @@ public class itemUtil {
     }
 
     public static void updateStockStatusPerChest(Block bHolder, Block bIgnore) {
-        List<Block> signs = FlatfileStorage.get().getSignsFromHolder(bHolder);
+        List<Block> signs = Storage.get().getSignsFromHolder(bHolder);
         if(signs != null) {
             for (Block temp : signs) {
                 if(temp == bIgnore)
                     continue;
                 if(!clickedSign(temp))
                     continue;
-                Seller seller = FlatfileStorage.get().getSeller(temp.getLocation());
+                Seller seller = Storage.get().getSeller(temp.getLocation());
                 updateStockStatusPerShop(seller);
             }
         }
@@ -411,7 +411,7 @@ public class itemUtil {
     }
 
     public static void updateStockStatus(Block bSign, ChatColor ccColor) {
-        Seller seTemp = FlatfileStorage.get().getSeller(bSign.getLocation());
+        Seller seTemp = Storage.get().getSeller(bSign.getLocation());
         if(seTemp != null) {
             List<Block> iChests = seTemp.getContainables();
             for(Block bHolder : iChests)
