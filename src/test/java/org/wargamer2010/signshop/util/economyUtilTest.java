@@ -75,7 +75,7 @@ public class economyUtilTest extends TestCase {
     /**
      * Test the efficiency of the parsers, with and without caching enabled
      */
-    public void testPriceCaching() {
+    public void validatePriceCacheTimes() {
         runBatchParserCacheTests(
                 new boolean[]{true, false},
                 new int[]{1000, 10000},
