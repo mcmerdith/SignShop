@@ -2,6 +2,9 @@ package org.wargamer2010.signshop.util;
 
 import com.opencsv.CSVWriter;
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
 
 import java.io.File;
@@ -10,71 +13,73 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class economyUtilTest extends TestCase {
+public class economyUtilTest {
     /**
      * Test the international price parser.
      */
+    @Test
     public void testparsePrice() {
         SignShopConfig.CommaDecimalSeparatorState prev = SignShopConfig.allowCommaDecimalSeparator();
         SignShopConfig.setAllowCommaDecimalSeparator(SignShopConfig.CommaDecimalSeparatorState.TRUE, false);
-        assertEquals(0.0D, economyUtil.parsePrice(null));
-        assertEquals(0.0D, economyUtil.parsePrice("null"));
-        assertEquals(0.0D, economyUtil.parsePrice("NaN"));
-        assertEquals(5.0D, economyUtil.parsePrice("-5"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1234"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1234.00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1234,00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1,234.00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1.234,00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1 234.00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1 234,00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1, 234.00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1. 234,00"));
-        assertEquals(123400.0D, economyUtil.parsePrice("1, 234,00"));
-        assertEquals(123400.0D, economyUtil.parsePrice("1. 234.00"));
-        assertEquals(123400.0D, economyUtil.parsePrice("1. 234. 00"));
-        assertEquals(123400.0D, economyUtil.parsePrice("1, 234, 00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1234"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1234 wa"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1234.00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1234,00"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1234.00 wa"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1234,00 wa"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1,234 wa"));
-        assertEquals(1234.0D, economyUtil.parsePrice("wa 1.234 wa"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1,,,,,234"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1.....234"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1,2,3,4,,,"));
-        assertEquals(1234.0D, economyUtil.parsePrice("1.2.3.4..."));
-        assertEquals(1234.0D, economyUtil.parsePrice(",,,1,2,3,4"));
-        assertEquals(1234.0D, economyUtil.parsePrice("...1.2.3.4"));
-        assertEquals(0.0D, economyUtil.parsePrice("..,.,.,.1234,.,.,.,"));
-        assertEquals(0.0D, economyUtil.parsePrice("1,.2,.3,.4,."));
-        assertEquals(0.0D, economyUtil.parsePrice("1.,2.,3.,4.,"));
-        assertEquals(12341234.0D, economyUtil.parsePrice("wa 1234 wa 1234"));
-        assertEquals(12341234.0D, economyUtil.parsePrice("1234 wa 1234 wa"));
-        assertEquals(121212.0D, economyUtil.parsePrice("12 wa 12 wa 12 wa"));
-        assertEquals(121212.0D, economyUtil.parsePrice("wa 12 wa 12 wa 12"));
-        assertEquals(12341234.0D, economyUtil.parsePrice("wa, 12,3,4 w,a 1,2,34,"));
-        assertEquals(12341234.0D, economyUtil.parsePrice("1234. wa. 1.2.3.4 .wa."));
-        assertEquals(1212.12D, economyUtil.parsePrice("12. wa 12. wa, 12 wa"));
-        assertEquals(1212.12D, economyUtil.parsePrice("wa, 12, wa 1,2 wa. 12"));
-        assertEquals(0.0D, economyUtil.parsePrice("12. wa 1,2 wa 12 wa"));
-        assertEquals(0.0D, economyUtil.parsePrice("wa, 12, wa 1.2 wa 12"));
-        assertEquals(1234.0D, economyUtil.parsePrice("!@#$%^&*()1234!@#$%^&*()"));
-        assertEquals(0.0D, economyUtil.parsePrice(""));
-        assertEquals(0.0D, economyUtil.parsePrice("i am nothing"));
-        assertEquals(40711031.0D, economyUtil.parsePrice("i 4m n07h1ng w1th s0m3th1ng"));
-        assertEquals(43.0D, economyUtil.parsePrice("giggity goo ga 43"));
-        assertEquals(12341234.0D, economyUtil.parsePrice("1234.1234"));
-        assertEquals(12341234.0D, economyUtil.parsePrice("1234,1234"));
-        assertEquals(12341234.0D, economyUtil.parsePrice("1234+1234"));
+        Assert.assertEquals(0.0D, economyUtil.parsePrice(null), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("null"), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("NaN"), 0);
+        Assert.assertEquals(5.0D, economyUtil.parsePrice("-5"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1234"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1234.00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1234,00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1,234.00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1.234,00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1 234.00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1 234,00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1, 234.00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1. 234,00"), 0);
+        Assert.assertEquals(123400.0D, economyUtil.parsePrice("1, 234,00"), 0);
+        Assert.assertEquals(123400.0D, economyUtil.parsePrice("1. 234.00"), 0);
+        Assert.assertEquals(123400.0D, economyUtil.parsePrice("1. 234. 00"), 0);
+        Assert.assertEquals(123400.0D, economyUtil.parsePrice("1, 234, 00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1234"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1234 wa"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1234.00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1234,00"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1234.00 wa"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1234,00 wa"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1,234 wa"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("wa 1.234 wa"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1,,,,,234"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1.....234"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1,2,3,4,,,"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("1.2.3.4..."), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice(",,,1,2,3,4"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("...1.2.3.4"), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("..,.,.,.1234,.,.,.,"), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("1,.2,.3,.4,."), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("1.,2.,3.,4.,"), 0);
+        Assert.assertEquals(12341234.0D, economyUtil.parsePrice("wa 1234 wa 1234"), 0);
+        Assert.assertEquals(12341234.0D, economyUtil.parsePrice("1234 wa 1234 wa"), 0);
+        Assert.assertEquals(121212.0D, economyUtil.parsePrice("12 wa 12 wa 12 wa"), 0);
+        Assert.assertEquals(121212.0D, economyUtil.parsePrice("wa 12 wa 12 wa 12"), 0);
+        Assert.assertEquals(12341234.0D, economyUtil.parsePrice("wa, 12,3,4 w,a 1,2,34,"), 0);
+        Assert.assertEquals(12341234.0D, economyUtil.parsePrice("1234. wa. 1.2.3.4 .wa."), 0);
+        Assert.assertEquals(1212.12D, economyUtil.parsePrice("12. wa 12. wa, 12 wa"), 0);
+        Assert.assertEquals(1212.12D, economyUtil.parsePrice("wa, 12, wa 1,2 wa. 12"), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("12. wa 1,2 wa 12 wa"), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("wa, 12, wa 1.2 wa 12"), 0);
+        Assert.assertEquals(1234.0D, economyUtil.parsePrice("!@#$%^&*()1234!@#$%^&*()"), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice(""), 0);
+        Assert.assertEquals(0.0D, economyUtil.parsePrice("i am nothing"), 0);
+        Assert.assertEquals(40711031.0D, economyUtil.parsePrice("i 4m n07h1ng w1th s0m3th1ng"), 0);
+        Assert.assertEquals(43.0D, economyUtil.parsePrice("giggity goo ga 43"), 0);
+        Assert.assertEquals(12341234.0D, economyUtil.parsePrice("1234.1234"), 0);
+        Assert.assertEquals(12341234.0D, economyUtil.parsePrice("1234,1234"), 0);
+        Assert.assertEquals(12341234.0D, economyUtil.parsePrice("1234+1234"), 0);
         SignShopConfig.setAllowCommaDecimalSeparator(prev, false);
     }
 
     /**
      * Test the efficiency of the parsers, with and without caching enabled
      */
+    @Ignore
     public void testPriceCaching() {
         runBatchParserCacheTests(
                 new boolean[]{true, false},
