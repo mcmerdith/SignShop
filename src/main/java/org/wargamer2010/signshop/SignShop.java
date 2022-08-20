@@ -15,10 +15,8 @@ import org.jetbrains.annotations.NotNull;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
 import org.wargamer2010.signshop.commands.*;
-import org.wargamer2010.signshop.configuration.ColorUtil;
-import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
-import org.wargamer2010.signshop.configuration.configUtil;
+import org.wargamer2010.signshop.configuration.*;
+import org.wargamer2010.signshop.configuration.database.DatabaseDataSource;
 import org.wargamer2010.signshop.listeners.SignShopBlockListener;
 import org.wargamer2010.signshop.listeners.SignShopLoginListener;
 import org.wargamer2010.signshop.listeners.SignShopPlayerListener;
@@ -48,7 +46,6 @@ public class SignShop extends JavaPlugin {
     public static WorthHandler worthHandler;
     private static SignShop instance;
     //Statics
-    private static Storage store;
     private static TimeManager manager = null;
     //Permissions
     private static boolean USE_PERMISSIONS = false;
@@ -150,20 +147,30 @@ public class SignShop extends JavaPlugin {
         DataConverter.init();
 
         //Create a storage locker for shops
-        store = Storage.init(new File(this.getDataFolder(), "sellers.yml"));
+        switch (SignShopConfig.getDataSource()) {
+            case INTERNAL:
+                debugMessage("Initializing new DatabaseDataSource");
+                Storage.setSource(new DatabaseDataSource());
+                break;
+            default:
+                debugMessage("Initializing new FlatFileDataSource");
+                Storage.setSource(new FlatFileDataSource(new File(this.getDataFolder(), "sellers.yml")));
+                break;
+        }
         manager = new TimeManager(new File(this.getDataFolder(), "timing.yml"));
 
         if (SignShopConfig.allowCommaDecimalSeparator() == SignShopConfig.CommaDecimalSeparatorState.AUTO) {
             // Plugin must decide if the comma separators are enabled
             SignShopConfig.CommaDecimalSeparatorState state;
-            if (store.shopCount() == 0) {
-                log("Comma decimal seperators have been enabled because this server has 0 shops.",Level.INFO);
+            String logMessage;
+            if (Storage.get().shopCount() == 0) {
+                logMessage = "Comma decimal seperators have been enabled because this server has 0 shops";
                 state = SignShopConfig.CommaDecimalSeparatorState.TRUE;
             } else {
-                log("Comma decimal separators have been disabled because this server has " + store.shopCount() + " shop(s) that may or may not be compatible with the new parser.",Level.INFO);
+                logMessage = "Comma decimal separators have been disabled because this server has " + Storage.get().shopCount() + " shop(s) that may not be compatible with the new parser";
                 state = SignShopConfig.CommaDecimalSeparatorState.FALSE;
             }
-            log("This can be changed by modifying 'AllowCommaDecimalSeperators' in the config.", Level.INFO);
+            log(logMessage + ". This can be changed by modifying 'AllowCommaDecimalSeperators' in the config.", Level.INFO);
             SignShopConfig.setAllowCommaDecimalSeparator(state);
         }
 
@@ -256,9 +263,8 @@ public class SignShop extends JavaPlugin {
     @Override
     public void onDisable() {
         closeHandlers();
-        if (store != null)
-            store.Save();
-        Storage.dispose();
+        Storage.get().Save();
+        Storage.get().dispose();
         if (manager != null)
             manager.stop();
         log("Disabled", Level.INFO);
