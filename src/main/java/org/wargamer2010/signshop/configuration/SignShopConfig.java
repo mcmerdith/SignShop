@@ -41,6 +41,7 @@ public class SignShopConfig {
     //Configurables
     private static FileConfiguration config;
     private static int ConfigVersionDoNotTouch = 3;
+    private static DataSourceType DataSource = DataSourceType.YML;
     private static int MaxSellDistance = 0;
     private static int MaxShopsPerPerson = 0;
     private static int ShopCooldown = 0;
@@ -217,6 +218,7 @@ public class SignShopConfig {
         configUtil.loadYMLFromJar(ymlThing, configFilename);
 
         ConfigVersionDoNotTouch = ymlThing.getInt("ConfigVersionDoNotTouch", ConfigVersionDoNotTouch);
+        DataSource = DataSourceType.fromConfigValue(ymlThing.getString("DataSource", DataSource.configValue()));
         MaxSellDistance = ymlThing.getInt("MaxSellDistance", MaxSellDistance);
         TransactionLog = ymlThing.getBoolean("TransactionLog", TransactionLog);
         Debugging = ymlThing.getBoolean("Debugging", Debugging);
@@ -245,8 +247,8 @@ public class SignShopConfig {
         EnableAutomaticLock = ymlThing.getBoolean("EnableAutomaticLock", EnableAutomaticLock);
         UseBlacklistAsWhitelist = ymlThing.getBoolean("UseBlacklistAsWhitelist", UseBlacklistAsWhitelist);
         EnableWrittenBookFix = ymlThing.getBoolean("EnableWrittenBookFix", EnableWrittenBookFix);
+        setAllowCommaDecimalSeparator(CommaDecimalSeparatorState.fromName(ymlThing.getString("AllowCommaDecimalSeparator", AllowCommaDecimalSeparator.name)));
         CachePrices = ymlThing.getBoolean("CachePrices", CachePrices);
-        AllowCommaDecimalSeparator = CommaDecimalSeparatorState.fromName(ymlThing.getString("AllowCommaDecimalSeparator", AllowCommaDecimalSeparator.name));
         ColorCode = ymlThing.getString("ColorCode", ColorCode);
         ChatPrefix = ymlThing.getString("ChatPrefix", ChatPrefix);
         Languages = ymlThing.getString("Languages", Languages);
@@ -705,6 +707,36 @@ public class SignShopConfig {
         return ConfigVersionDoNotTouch;
     }
 
+    public enum DataSourceType {
+        YML("yml"),
+        INTERNAL("internal"),
+        EXTERNAL_MARIADB("external_mariadb"),
+        EXTERNAL_MYSQL("external_mysql");
+
+        private final String configValue;
+        public String configValue() {
+            return configValue;
+        }
+
+        public static DataSourceType fromConfigValue(String configValue) {
+            for (DataSourceType type : values()) {
+                if (type.configValue().equalsIgnoreCase(configValue)) {
+                    return type;
+                }
+            }
+
+            return null;
+        }
+
+        DataSourceType(String configValue) {
+            this.configValue = configValue;
+        }
+    }
+
+    public static DataSourceType getDataSource() {
+        return DataSource;
+    }
+
     public static int getMaxSellDistance() {
         return MaxSellDistance;
     }
@@ -847,11 +879,11 @@ public class SignShopConfig {
         AllowCommaDecimalSeparator = state;
 
         if (doSave) {
+            SignShop.log("AllowCommaDecimalSeparator has been updated to " + state.name, Level.INFO);
             FileConfiguration ymlThing = configUtil.loadYMLFromPluginFolder(configFilename);
             File configFile = new File(SignShop.getInstance().getDataFolder(), configFilename);
             ymlThing.set("AllowCommaDecimalSeparator", state.name);
             saveConfig(ymlThing, configFile);
-            SignShop.debugMessage("AllowCommaDecimalSeparator has been updated to " + state.name + " in the config.");
         }
     }
     public static void setAllowCommaDecimalSeparator(CommaDecimalSeparatorState state) {
