@@ -40,10 +40,11 @@ AllowCommaDecimalSeparator: auto
 CachePrices: true
 
 # How the plugin should store shop data
-# flatfile         : Store the data in sellers.yml
-# internal_database: Store the data in an internal SQL database
-# external_database: Store the data in an external SQL database
-DataSource: flatfile
+# yml             : Store the data in sellers.yml
+# internal_sqlite : Store the data in an internal SQL database
+# external_mysql  : Store the data in an external SQL database
+# external_mariadb: Store the data in an external MariaDB database
+DataSource: yml
 
 #----------- Tools ------------------
 

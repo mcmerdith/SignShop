@@ -6,6 +6,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
+import org.wargamer2010.signshop.configuration.database.SQL_Schema;
 import org.wargamer2010.signshop.player.PlayerCache;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
@@ -13,7 +14,12 @@ import org.wargamer2010.signshop.util.itemUtil;
 import org.wargamer2010.signshop.util.signshopUtil;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+import static org.wargamer2010.signshop.configuration.database.SQL_Schema.TABLE_SELLERS;
+import static org.wargamer2010.signshop.configuration.database.SQL_Schema.TABLE_ACTIVATABLES;
+import static org.wargamer2010.signshop.configuration.database.SQL_Schema.TABLE_CONTAINABLES;
+import static org.wargamer2010.signshop.configuration.database.SQL_Schema.TABLE_ITEMS;
 
 public class Seller {
     private List<Block> containables;
@@ -200,6 +206,69 @@ public class Seller {
 
         serializedData = temp;
     }
+
+    /*
+    SQL Database Functions
+     */
+    public Map<String, Object> sqlFields() {
+        Map<String, Object> fields = new HashMap<>();
+        fields.put(TABLE_SELLERS.SHOPWORLD.columnName(), getWorld());
+        fields.put(TABLE_SELLERS.OWNER.columnName(), getOwner().GetIdentifier().toString());
+        fields.put(TABLE_SELLERS.SIGN.columnName(), signshopUtil.convertLocationToString(getSignLocation()));
+        fields.put(TABLE_SELLERS.MISC.columnName(), miscProps.entrySet().stream().map((misc) -> misc.getKey() + ":" + misc.getValue()).collect(Collectors.joining(";")));
+        return fields;
+    }
+
+    public List<Map<String, Object>> sqlActivatables() {
+        List<Map<String, Object>> sqlActivatables = new ArrayList<>();
+
+        String signLocation = signshopUtil.convertLocationToString(getSignLocation());
+
+        activatables.forEach((activatable) -> {
+            Map<String, Object> aData = new HashMap<>();
+            aData.put(TABLE_ACTIVATABLES.ACTIVATABLE.columnName(), signshopUtil.convertLocationToString(activatable.getLocation()));
+            aData.put(TABLE_ACTIVATABLES.SELLER_SIGN.columnName(), signLocation);
+
+            sqlActivatables.add(aData);
+        });
+
+        return sqlActivatables;
+    }
+
+    public List<Map<String, Object>> sqlContainables() {
+        List<Map<String, Object>> sqlContainables = new ArrayList<>();
+
+        String signLocation = signshopUtil.convertLocationToString(getSignLocation());
+
+        containables.forEach((containable) -> {
+            Map<String, Object> cData = new HashMap<>();
+            cData.put(TABLE_CONTAINABLES.CONTAINABLE.columnName(), signshopUtil.convertLocationToString(containable.getLocation()));
+            cData.put(TABLE_CONTAINABLES.SELLER_SIGN.columnName(), signLocation);
+
+            sqlContainables.add(cData);
+        });
+
+        return sqlContainables;
+    }
+
+    public List<Map<String, Object>> sqlItems() {
+        List<Map<String, Object>> sqlItems = new ArrayList<>();
+
+        String signLocation = signshopUtil.convertLocationToString(getSignLocation());
+
+        for(ItemStack item : getItems(false)) {
+            Map<String, Object> iData = new HashMap<>();
+            iData.put(TABLE_ITEMS.ITEM.columnName(), item);
+            iData.put(TABLE_ITEMS.SELLER_SIGN.columnName(), signLocation);
+
+            sqlItems.add(iData);
+        }
+
+        return sqlItems;
+    }
+    /*
+    END SQL
+     */
 
     private List<String> MapToList(Map<String, String> map) {
         List<String> returnList = new LinkedList<>();

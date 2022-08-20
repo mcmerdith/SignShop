@@ -41,7 +41,8 @@ public class SignShopConfig {
     //Configurables
     private static FileConfiguration config;
     private static int ConfigVersionDoNotTouch = 3;
-    private static DataSourceType DataSource;
+    // Storage (DB etc)
+    private static DataSourceType DataSource = DataSourceType.YML;
     private static int MaxSellDistance = 0;
     private static int MaxShopsPerPerson = 0;
     private static int ShopCooldown = 0;
@@ -49,7 +50,7 @@ public class SignShopConfig {
     private static int ChunkLoadRadius = 2;
     private static int MaxChestsPerShop = 100;
     private static boolean TransactionLog = false;
-    private static boolean Debugging = false;
+    private static boolean Debugging = true;
     private static boolean MetricsEnabled = true;
     private static boolean OPOverride = true;
     private static boolean AllowUnsafeEnchantments = false;
@@ -218,7 +219,7 @@ public class SignShopConfig {
         configUtil.loadYMLFromJar(ymlThing, configFilename);
 
         ConfigVersionDoNotTouch = ymlThing.getInt("ConfigVersionDoNotTouch", ConfigVersionDoNotTouch);
-        DataSource = DataSourceType.fromConfigValue(ymlThing.getString("DataSource", DataSourceType.FLATFILE.configValue()));
+        DataSource = DataSourceType.fromConfigValue(ymlThing.getString("DataSource", DataSource.configValue()));
         MaxSellDistance = ymlThing.getInt("MaxSellDistance", MaxSellDistance);
         TransactionLog = ymlThing.getBoolean("TransactionLog", TransactionLog);
         Debugging = ymlThing.getBoolean("Debugging", Debugging);
@@ -708,9 +709,10 @@ public class SignShopConfig {
     }
 
     public enum DataSourceType {
-        FLATFILE("flatfile"),
-        INTERNAL_DB("internal_database"),
-        EXTERNAL_DB("external_database");
+        YML("yml"),
+        INTERNAL_SQLITE("embedded_sqlite"),
+        EXTERNAL_MYSQL("external_database"),
+        EXTERNAL_MARIADB("external_mariadb");
 
         private final String configValue;
         public String configValue() {
@@ -724,7 +726,9 @@ public class SignShopConfig {
                 }
             }
 
-            return null;
+            SignShop.log(String.format("Invalid config option set for 'DataSource': %s. Defaulting to YML storage", configValue), Level.WARNING);
+
+            return YML;
         }
 
         DataSourceType(String configValue) {

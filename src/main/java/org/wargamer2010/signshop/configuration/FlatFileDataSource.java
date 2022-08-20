@@ -31,10 +31,9 @@ import java.util.logging.Level;
 
 public class FlatFileDataSource extends Storage implements Listener {
     private final File ymlfile;
-    private final LinkedBlockingQueue<FileConfiguration> saveQueue = new LinkedBlockingQueue<>();
 
     private FileSaveWorker fileSaveWorker;
-
+    private int taskId = 0;
 
     private Map<Location,Seller> sellers;
 
@@ -42,6 +41,7 @@ public class FlatFileDataSource extends Storage implements Listener {
 
     public FlatFileDataSource(File ymlFile) {
         fileSaveWorker = new FileSaveWorker(ymlFile);
+        taskId = fileSaveWorker.runTaskTimerAsynchronously(SignShop.getInstance(), 1, 1).getTaskId();
         if(!ymlFile.exists()) {
             try {
                 ymlFile.createNewFile();

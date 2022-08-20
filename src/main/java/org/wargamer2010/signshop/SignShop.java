@@ -16,6 +16,7 @@ import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
 import org.wargamer2010.signshop.commands.*;
 import org.wargamer2010.signshop.configuration.*;
+import org.wargamer2010.signshop.configuration.database.DatabaseDataSource;
 import org.wargamer2010.signshop.listeners.SignShopBlockListener;
 import org.wargamer2010.signshop.listeners.SignShopLoginListener;
 import org.wargamer2010.signshop.listeners.SignShopPlayerListener;
@@ -147,7 +148,7 @@ public class SignShop extends JavaPlugin {
 
         //Create a storage locker for shops
         switch (SignShopConfig.getDataSource()) {
-            case INTERNAL_DB:
+            case INTERNAL_SQLITE:
                 debugMessage("Initializing new DatabaseDataSource");
                 Storage.setSource(new DatabaseDataSource());
                 break;
