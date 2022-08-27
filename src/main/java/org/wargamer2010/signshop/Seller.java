@@ -1,11 +1,16 @@
 package org.wargamer2010.signshop;
 
+import jakarta.persistence.*;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
+import org.wargamer2010.signshop.configuration.database.models.SellerExport;
+import org.wargamer2010.signshop.configuration.database.datatype.*;
 import org.wargamer2010.signshop.player.PlayerCache;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
@@ -15,18 +20,56 @@ import org.wargamer2010.signshop.util.signshopUtil;
 
 import java.util.*;
 
-
+@Entity
+@Table(name = "sellers")
 public class Seller {
+    // DB ONLY, sign location used to be PK but in the database its a blob
+    @Id
+    @GeneratedValue(generator = "increment")
+    @GenericGenerator(name = "increment", strategy = "increment")
+    private Long id;
+
+    @OneToOne(mappedBy = "seller")
+    private SellerExport export;
+
+    @ElementCollection
+    @Convert(converter = BlockConverter.class)
+    @Type(LocationType.class)
     private List<Block> containables;
+
+    @ElementCollection
+    @Convert(converter = BlockConverter.class)
+    @Type(LocationType.class)
     private List<Block> activatables;
+
+    @Type(ItemStackType.class)
+    @Column(name = "items")
     private ItemStack[] isItems;
-    private final Location signLocation;
-    private final Map<String, String> miscProps = new HashMap<>();
-    private final Map<String, String> volatileProperties = new LinkedHashMap<>();
+
+    @Column(name = "sign")
+    @Basic(optional = false)
+    @Type(LocationType.class)
+    private Location signLocation;
+
+    @SuppressWarnings("JpaAttributeTypeInspection")
+    @Convert(converter = MapConverter.class)
+    private Map<String, String> miscProps = new HashMap<>();
+
+    @Transient
+    private Map<String, String> volatileProperties = new LinkedHashMap<>();
+
+    @Transient
     private Map<String, Object> serializedData = new HashMap<>();
 
+    @Convert(converter = SignShopPlayerConverter.class)
+    @Basic(optional = false)
     private SignShopPlayer owner;
-    private final String world;
+
+    @Basic(optional = false)
+    private String world;
+
+    protected Seller() {
+    }
 
     public Seller(PlayerIdentifier playerId, String sWorld, List<Block> pContainables, List<Block> pActivatables, ItemStack[] isChestItems, Location location,
             Map<String, String> pMiscProps, Boolean save) {
