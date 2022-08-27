@@ -2,6 +2,7 @@
 package org.wargamer2010.signshop.blocks;
 
 import org.wargamer2010.signshop.SignShop;
+import org.wargamer2010.signshop.configuration.Storage;
 
 import java.io.File;
 import java.sql.*;
@@ -10,12 +11,22 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 
+/**
+ * @deprecated Will be removed very soon
+ * @see Storage#getBuiltInDatabase()
+ */
+@Deprecated
 public class SSDatabase {
     private static final String downloadURL = "http://cloud.github.com/downloads/wargamer/SignShop/";
     private static Driver driver = null;
     private Connection conn = null;
     private String filename;
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     public SSDatabase(final String pFilename) {
         filename = pFilename;
 
@@ -27,6 +38,11 @@ public class SSDatabase {
             SignShop.log("Connection to: " + filename + " could not be established", Level.WARNING);
     }
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     private void checkLegacy() {
         String dbdirname = "db";
         File dbdir = new File(SignShop.getInstance().getDataFolder(), dbdirname);
@@ -46,6 +62,11 @@ public class SSDatabase {
         filename = (dbdirname + File.separator + filename);
     }
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     public Boolean tableExists(String tablename) {
         try {
             Map<Integer, Object> pars = new LinkedHashMap<>();
@@ -62,6 +83,11 @@ public class SSDatabase {
         return false;
     }
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     public boolean columnExists(String needle) {
         ResultSet result = (ResultSet) runStatement("PRAGMA table_info(Book);", null, true);
         if(result == null)
@@ -82,6 +108,11 @@ public class SSDatabase {
         return false;
     }
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     public final void loadLib() {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -92,6 +123,11 @@ public class SSDatabase {
         driver = new org.sqlite.JDBC();
     }
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     public final boolean open() {
         if(driver == null)
             return false;
@@ -104,6 +140,11 @@ public class SSDatabase {
         return (conn != null);
     }
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     public void close() {
         if (conn == null || driver == null)
             return;
@@ -113,6 +154,11 @@ public class SSDatabase {
         }
     }
 
+    /**
+     * @deprecated Will be removed very soon
+     * @see Storage#getBuiltInDatabase()
+     */
+    @Deprecated
     public Object runStatement(String Query, Map<Integer, Object> params, Boolean expectingResult) {
         try {
             if(conn == null) {
