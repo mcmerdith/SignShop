@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
-public class FlatFileDataSource extends Storage implements Listener {
+public class YMLDataSource extends Storage implements Listener {
     private final File ymlfile;
     private final LinkedBlockingQueue<FileConfiguration> saveQueue = new LinkedBlockingQueue<>();
 
@@ -40,12 +40,12 @@ public class FlatFileDataSource extends Storage implements Listener {
 
     private final Map<String, HashMap<String, List<String>>> invalidShops = new LinkedHashMap<>();
 
-    public FlatFileDataSource(File ymlFile) {
+    public YMLDataSource(File ymlFile) {
         fileSaveWorker = new FileSaveWorker(ymlFile);
         if(!ymlFile.exists()) {
             try {
                 ymlFile.createNewFile();
-                Save();
+                saveSellers();
             } catch(IOException ex) {
                 SignShop.log("Could not create sellers.yml", Level.WARNING);
             }
@@ -54,7 +54,7 @@ public class FlatFileDataSource extends Storage implements Listener {
         sellers = new HashMap<>();
 
         // Load into memory, this also removes invalid signs (hence the backup)
-        Boolean needToSave = Load();
+        Boolean needToSave = loadSellers();
 
         if(needToSave) {
             File backupTo = new File(ymlFile.getPath()+".bak");
@@ -65,7 +65,7 @@ public class FlatFileDataSource extends Storage implements Listener {
             } catch(IOException ex) {
                 SignShop.log(SignShopConfig.getError("backup_fail", null), Level.WARNING);
             }
-            Save();
+            saveSellers();
         }
     }
 
@@ -199,7 +199,7 @@ public class FlatFileDataSource extends Storage implements Listener {
         return true;
     }
 
-    public boolean Load() {
+    public boolean loadSellers() {
         SignShop.log("Loading and validating shops, please wait...",Level.INFO);
         FileConfiguration yml = YamlConfiguration.loadConfiguration(ymlfile);
         ConfigurationSection sellersection = yml.getConfigurationSection("sellers");
@@ -259,7 +259,7 @@ public class FlatFileDataSource extends Storage implements Listener {
     }
 
     @Override
-    public boolean Save() {
+    public boolean saveSellers() {
         Map<String, Object> tempSellers = new HashMap<>();
         FileConfiguration config = new YamlConfiguration();
 
@@ -284,7 +284,7 @@ public class FlatFileDataSource extends Storage implements Listener {
     public void addSeller(PlayerIdentifier playerId, String sWorld, Block bSign, List<Block> containables, List<Block> activatables, ItemStack[] isItems, Map<String, String> misc, boolean save) {
         sellers.put(bSign.getLocation(), new Seller(playerId, sWorld, containables, activatables, isItems, bSign.getLocation(), misc, save));
         if(save)
-            this.Save();
+            this.saveSellers();
     }
 
     @Override
@@ -311,7 +311,7 @@ public class FlatFileDataSource extends Storage implements Listener {
     public void removeSeller(Location lKey) {
         if(sellers.containsKey(lKey)){
             sellers.remove(lKey);
-            this.Save();
+            this.saveSellers();
         }
     }
 

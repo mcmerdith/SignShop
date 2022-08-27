@@ -78,7 +78,7 @@ public class LinkSpecialSign implements SignShopSpecialOp {
             return false;
         else if(newSigns.isEmpty()) {
             seller.removeMisc(MiscSetting);
-            Storage.get().Save();
+            Storage.get().saveSellers();
             return true;
         }
         newSigns.addAll(currentSigns);
@@ -103,7 +103,7 @@ public class LinkSpecialSign implements SignShopSpecialOp {
         else {
             ssPlayer.sendMessage(SignShopConfig.getError(LinkedMessage, null));
             seller.addMisc(MiscSetting, locations);
-            Storage.get().Save();
+            Storage.get().saveSellers();
         }
 
         return true;

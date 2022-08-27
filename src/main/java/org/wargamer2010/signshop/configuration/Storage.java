@@ -5,13 +5,19 @@ import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
+import org.wargamer2010.signshop.configuration.database.DatabaseDataSource;
+import org.wargamer2010.signshop.configuration.database.InternalDatabase;
+import org.wargamer2010.signshop.configuration.database.models.SignShopSchema;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
+import org.wargamer2010.signshop.util.SignShopLogger;
 
 import javax.annotation.Nonnull;
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 public abstract class Storage {
     /**
@@ -19,14 +25,32 @@ public abstract class Storage {
      *
      * @return If the load was successful
      */
-    abstract public boolean Load();
+    abstract public boolean loadSellers();
+
+    /**
+     * Renamed to {@link Storage#loadSellers()}
+     * @deprecated Will be removed at a later date
+     */
+    @Deprecated
+    final public boolean Load() {
+        return loadSellers();
+    }
 
     /**
      * Save SignShops Data
      *
      * @return If the save was successful
      */
-    abstract public boolean Save();
+    abstract public boolean saveSellers();
+
+    /**
+     * Renamed to {@link Storage#saveSellers()}
+     * @deprecated Will be removed at a later date
+     */
+    @Deprecated
+    final public boolean Save() {
+        return saveSellers();
+    }
 
     /**
      * Clean up any data before closing
@@ -46,10 +70,10 @@ public abstract class Storage {
      * @param playerId     Player owner
      * @param sWorld       The world the shop is in
      * @param bSign        The sign
-     * @param containables TODO containables
-     * @param activatables TODO activatables
-     * @param isItems      TODO isItems
-     * @param misc         TODO misc
+     * @param containables A list of containers the shop can draw from/deposit to
+     * @param activatables A list of blocks the shop can "activate" (for [Device] signs etc)
+     * @param isItems      The items the shop was configured with (items to take for [Sell], items to give for [Buy], etc)
+     * @param misc         Any miscellaneous properties
      */
     public void addSeller(@Nonnull PlayerIdentifier playerId, @Nonnull String sWorld, @Nonnull Block bSign, @Nonnull List<Block> containables, @Nonnull List<Block> activatables, @Nonnull ItemStack[] isItems, @Nonnull Map<String, String> misc) {
         addSeller(playerId, sWorld, bSign, containables, activatables, isItems, misc, true);
@@ -61,10 +85,10 @@ public abstract class Storage {
      * @param playerId     Player owner
      * @param sWorld       The world the shop is in
      * @param bSign        The sign
-     * @param containables TODO containables
-     * @param activatables TODO activatables
-     * @param isItems      TODO isItems
-     * @param misc         TODO misc
+     * @param containables A list of containers the shop can draw from/deposit to
+     * @param activatables A list of blocks the shop can "activate" (for [Device] signs etc)
+     * @param isItems      The items the shop was configured with (items to take for [Sell], items to give for [Buy], etc)
+     * @param misc         Any miscellaneous properties
      * @param save         If we should save
      */
     abstract public void addSeller(PlayerIdentifier playerId, String sWorld, Block bSign, List<Block> containables, List<Block> activatables, ItemStack[] isItems, Map<String, String> misc, boolean save);
@@ -73,8 +97,8 @@ public abstract class Storage {
      * Update a shop
      *
      * @param bSign        The new sign
-     * @param containables TODO containables
-     * @param activatables TODO activatables
+     * @param containables A list of containers the shop can draw from/deposit to
+     * @param activatables A list of blocks the shop can "activate" (for [Device] signs etc)
      */
     public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables) {
         updateSeller(bSign, containables, activatables, null);
@@ -84,9 +108,9 @@ public abstract class Storage {
      * Update a shop
      *
      * @param bSign        The new sign
-     * @param containables TODO containables
-     * @param activatables TODO activatables
-     * @param isItems      TODO isItems
+     * @param containables A list of containers the shop can draw from/deposit to
+     * @param activatables A list of blocks the shop can "activate" (for [Device] signs etc)
+     * @param isItems      The items the shop was configured with (items to take for [Sell], items to give for [Buy], etc)
      */
     abstract public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables, ItemStack[] isItems);
 
@@ -149,13 +173,26 @@ public abstract class Storage {
     abstract public List<Seller> getShopsByBlock(Block bBlock);
 
     /**
-     * TODO what is misc?
+     * Get a shop based on a special property
      *
-     * @param key   TODO key
-     * @param value TODO value
-     * @return TODO
+     * @param key   Key name
+     * @param value Value
+     * @return List of shops matching those properties
      */
     abstract public List<Block> getShopsWithMiscSetting(String key, String value);
+
+    /**
+     * Move all of this Storage's data to a new Storage
+     * @param newStorage The new Storage
+     * @return If the migration was successful
+     */
+    abstract public boolean migrateTo(Storage newStorage);
+
+    /*
+    Compatibility stuff and Initialization
+     */
+
+    private static SignShopLogger logger = SignShopLogger.getStorageLogger();
 
     /**
      * The active storage implementation
@@ -163,22 +200,52 @@ public abstract class Storage {
     private static Storage source;
 
     /**
-     * Set a new storage implementation
-     * <br>If the storage implementation is already set it will be saved and disposed of
-     *
-     * @param storage
+     * The internal database
      */
-    public static void setSource(Storage storage) {
-        if (source != null) {
-            source.Save();
-            source.dispose();
+    private static DatabaseDataSource database;
 
-            SignShop.debugMessage(String.format("Changing storage implementation from '%s' to '%s'", source.getClass().getSimpleName(), storage.getClass().getSimpleName()));
-        } else {
-            SignShop.debugMessage(String.format("Set storage implementation to '%s'", storage.getClass().getSimpleName()));
+    /**
+     * Initialize data storage using the implementation defined by {@link SignShopConfig#getDataSource()}
+     * <br>If Storage has already been initialized, the existing Storage will be Saved and disposed of before the new Storage is initialized
+     */
+    public static void init() {
+        SignShopConfig.DataSourceType type = SignShopConfig.getDataSource();
+
+        logger.info("Setting Storage implementation to " + type.name());
+
+        if (source != null) {
+            logger.info("Saving and disposing of existing Storage: " + source.getClass().getSimpleName());
+
+            source.saveSellers();
+            source.dispose();
         }
 
-        source = storage;
+        // Initialize the internal database
+        database = new DatabaseDataSource(type);
+
+        switch (type) {
+            case MARIADB:
+            case MYSQL:
+            case SQLITE:
+                // Don't make more than 1 instance of the database, use the same one
+                source = database;
+                break;
+            case YML:
+                source = new YMLDataSource(new File(SignShop.getInstance().getDataFolder(), "sellers.yml"));
+                break;
+        }
+
+        if (database.getSchema().needsStorageMigration()) {
+            SignShopLogger migrationLogger = new SignShopLogger("Storage Migrator");
+
+            SignShopConfig.DataSourceType from = database.getSchema().getDataSource();
+            SignShopConfig.DataSourceType to = SignShopConfig.getDataSource();
+
+            migrationLogger.info("Migrating data from " + from.name() + " to " + to.name());
+            migrationLogger.info("Complete!");
+        }
+
+        logger.info("Success!");
     }
 
     /**
@@ -189,6 +256,8 @@ public abstract class Storage {
     public static Storage get() {
         return source;
     }
+
+    public static InternalDatabase getBuiltInDatabase() { return database; }
 
     /**
      * LEGACY: String seperator for legacy stored data

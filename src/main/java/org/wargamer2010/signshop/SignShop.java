@@ -16,7 +16,6 @@ import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
 import org.wargamer2010.signshop.commands.*;
 import org.wargamer2010.signshop.configuration.*;
-import org.wargamer2010.signshop.configuration.database.DatabaseDataSource;
 import org.wargamer2010.signshop.listeners.SignShopBlockListener;
 import org.wargamer2010.signshop.listeners.SignShopLoginListener;
 import org.wargamer2010.signshop.listeners.SignShopPlayerListener;
@@ -147,16 +146,8 @@ public class SignShop extends JavaPlugin {
         DataConverter.init();
 
         //Create a storage locker for shops
-        switch (SignShopConfig.getDataSource()) {
-            case INTERNAL:
-                debugMessage("Initializing new DatabaseDataSource");
-                Storage.setSource(new DatabaseDataSource());
-                break;
-            default:
-                debugMessage("Initializing new FlatFileDataSource");
-                Storage.setSource(new FlatFileDataSource(new File(this.getDataFolder(), "sellers.yml")));
-                break;
-        }
+        Storage.init();
+
         manager = new TimeManager(new File(this.getDataFolder(), "timing.yml"));
 
         if (SignShopConfig.allowCommaDecimalSeparator() == SignShopConfig.CommaDecimalSeparatorState.AUTO) {
@@ -263,7 +254,7 @@ public class SignShop extends JavaPlugin {
     @Override
     public void onDisable() {
         closeHandlers();
-        Storage.get().Save();
+        Storage.get().saveSellers();
         Storage.get().dispose();
         if (manager != null)
             manager.stop();

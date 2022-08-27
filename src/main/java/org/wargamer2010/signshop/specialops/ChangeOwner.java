@@ -43,7 +43,7 @@ public class ChangeOwner implements SignShopSpecialOp {
             return false;
 
         seller.setOwner(new SignShopPlayer(newOwner));
-        Storage.get().Save();
+        Storage.get().saveSellers();
         ssPlayer.sendMessage("Succesfully changed ownership of shop to " + newOwner.getName());
         clicks.mClicksPerPlayerId.remove(newOwner);
         return true;
