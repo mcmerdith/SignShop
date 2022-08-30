@@ -1,4 +1,4 @@
-package org.wargamer2010.signshop.configuration.database.util;
+package org.wargamer2010.signshop.configuration.storage.database.util;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
