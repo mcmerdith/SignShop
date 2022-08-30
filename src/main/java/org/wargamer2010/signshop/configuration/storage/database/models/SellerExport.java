@@ -1,4 +1,4 @@
-package org.wargamer2010.signshop.configuration.database.models;
+package org.wargamer2010.signshop.configuration.storage.database.models;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;

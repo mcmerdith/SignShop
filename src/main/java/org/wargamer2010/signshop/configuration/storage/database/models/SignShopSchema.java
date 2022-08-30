@@ -1,12 +1,12 @@
-package org.wargamer2010.signshop.configuration.database.models;
+package org.wargamer2010.signshop.configuration.storage.database.models;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.database.DatabaseDataSource;
-import org.wargamer2010.signshop.configuration.database.datatype.MapConverter;
-import org.wargamer2010.signshop.configuration.database.util.DatabaseUtil;
+import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
+import org.wargamer2010.signshop.configuration.storage.database.datatype.MapConverter;
+import org.wargamer2010.signshop.configuration.storage.database.util.DatabaseUtil;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
 import java.io.File;
