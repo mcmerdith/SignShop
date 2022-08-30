@@ -39,6 +39,49 @@ AllowCommaDecimalSeparator: auto
 # Most useful on larger servers with many signs
 CachePrices: true
 
+#---------- Storage -----------------
+
+# Storage implementation
+# YML storage is deprecated and only present for legacy support
+# One of:
+#   - YML
+#   - SQLite
+#   - MySQL
+#   - MariaDB
+DataSource: SQLite
+
+#----- Database Configuration -------
+# These settings are not used if 'DataSource' is YML or SQLite
+
+# Use a custom database configuration. If set to 'true' SignShop will use properties from "database.properties" to overwrite the settings in this config
+# ADVANCED USERS ONLY. Do not enable unless you know what you are doing and accept the risks. Misconfiguration may result in data loss
+# database.properties is a Hibernate configuration backed by HikariCP. See:
+#   https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#database-connectionprovider-hikari
+#   https://github.com/brettwooldridge/HikariCP/wiki/Hibernate4
+# Only SQLite, MySQL, and MariaDB drivers are packaged. If you need a different driver you'll need to install it
+UseCustomDatabaseConfig: false
+
+# Database Configuration. The default configuration is for default MySQL databases
+Database:
+  # Minimum number of database connections while idle
+  MinimumIdle: 5
+  # Maximum number of database connections
+  MaximumPoolSize: 10
+  # Fully qualified host name of the database
+  Host: localhost
+  # Port number of the database
+  Port: 3306
+  # The name of the database
+  DatabaseName: signshop
+  # A unique name for this server. If you have more than 1 server running SignShop, MAKE SURE TO USE UNIQUE IDs. SignShop does not know the difference between this server and the other one
+  # Changing this value after first launch will cause SignShops database to reinitialize from sellers.yml
+  ServerName: default
+  Authentication:
+    # Username for the database
+    Username: ''
+    # Password for the database
+    Password: ''
+
 #----------- Tools ------------------
 
 # Item names (https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html)
