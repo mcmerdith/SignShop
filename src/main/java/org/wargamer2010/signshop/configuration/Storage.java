@@ -1,13 +1,16 @@
 package org.wargamer2010.signshop.configuration;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
-import org.wargamer2010.signshop.configuration.database.DatabaseDataSource;
-import org.wargamer2010.signshop.configuration.database.InternalDatabase;
-import org.wargamer2010.signshop.configuration.database.models.SignShopSchema;
+import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
+import org.wargamer2010.signshop.configuration.storage.database.InternalDatabase;
+import org.wargamer2010.signshop.configuration.storage.YMLDataSource;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 import org.wargamer2010.signshop.util.SignShopLogger;
@@ -17,7 +20,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 public abstract class Storage {
     /**
@@ -29,6 +31,7 @@ public abstract class Storage {
 
     /**
      * Renamed to {@link Storage#loadSellers()}
+     *
      * @deprecated Will be removed at a later date
      */
     @Deprecated
@@ -39,12 +42,13 @@ public abstract class Storage {
     /**
      * Save SignShops Data
      *
-     * @return If the save was successful
+     * @return If the data needs saving
      */
     abstract public boolean saveSellers();
 
     /**
      * Renamed to {@link Storage#saveSellers()}
+     *
      * @deprecated Will be removed at a later date
      */
     @Deprecated
@@ -75,7 +79,7 @@ public abstract class Storage {
      * @param isItems      The items the shop was configured with (items to take for [Sell], items to give for [Buy], etc)
      * @param misc         Any miscellaneous properties
      */
-    public void addSeller(@Nonnull PlayerIdentifier playerId, @Nonnull String sWorld, @Nonnull Block bSign, @Nonnull List<Block> containables, @Nonnull List<Block> activatables, @Nonnull ItemStack[] isItems, @Nonnull Map<String, String> misc) {
+    final public void addSeller(@Nonnull PlayerIdentifier playerId, @Nonnull String sWorld, @Nonnull Block bSign, @Nonnull List<Block> containables, @Nonnull List<Block> activatables, @Nonnull ItemStack[] isItems, @Nonnull Map<String, String> misc) {
         addSeller(playerId, sWorld, bSign, containables, activatables, isItems, misc, true);
     }
 
@@ -100,7 +104,7 @@ public abstract class Storage {
      * @param containables A list of containers the shop can draw from/deposit to
      * @param activatables A list of blocks the shop can "activate" (for [Device] signs etc)
      */
-    public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables) {
+    final public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables) {
         updateSeller(bSign, containables, activatables, null);
     }
 
@@ -137,7 +141,7 @@ public abstract class Storage {
      * @deprecated Shops store their own sign location, this is only a legacy helper method
      */
     @Deprecated
-    public Block getSignFromSeller(Seller pSeller) {
+    final public Block getSignFromSeller(Seller pSeller) {
         return pSeller.getSign();
     }
 
@@ -182,17 +186,16 @@ public abstract class Storage {
     abstract public List<Block> getShopsWithMiscSetting(String key, String value);
 
     /**
-     * Move all of this Storage's data to a new Storage
-     * @param newStorage The new Storage
-     * @return If the migration was successful
+     * Get the Storage implementation this DataSource represents
+     * @return The implemented datasource
      */
-    abstract public boolean migrateTo(Storage newStorage);
+    abstract public SignShopConfig.DataSourceType getType();
 
     /*
     Compatibility stuff and Initialization
      */
 
-    private static SignShopLogger logger = SignShopLogger.getStorageLogger();
+    private static final SignShopLogger logger = SignShopLogger.getStorageLogger();
 
     /**
      * The active storage implementation
@@ -236,13 +239,8 @@ public abstract class Storage {
         }
 
         if (database.getSchema().needsStorageMigration()) {
-            SignShopLogger migrationLogger = new SignShopLogger("Storage Migrator");
-
             SignShopConfig.DataSourceType from = database.getSchema().getDataSource();
             SignShopConfig.DataSourceType to = SignShopConfig.getDataSource();
-
-            migrationLogger.info("Migrating data from " + from.name() + " to " + to.name());
-            migrationLogger.info("Complete!");
         }
 
         logger.info("Success!");
@@ -257,7 +255,59 @@ public abstract class Storage {
         return source;
     }
 
-    public static InternalDatabase getBuiltInDatabase() { return database; }
+    public static InternalDatabase getBuiltInDatabase() {
+        return database;
+    }
+
+    /**
+     * Migrate data from another storage implementation to the current on
+     *
+     * @param oldStorage The old Storage
+     * @return If the migration was successful
+     */
+    public static boolean migrate(Storage oldStorage) {
+        SignShopLogger migrationLogger = new SignShopLogger("Storage Migrator");
+
+        SignShopConfig.DataSourceType oldType = oldStorage.getType();
+        SignShopConfig.DataSourceType currentType = source.getType();
+
+        migrationLogger.info("Migrating data from " + oldType.name() + " to " + currentType.name());
+
+        if (oldType == currentType) {
+            migrationLogger.info("Storage implementation has not changed! No need to migrate");
+            return true;
+        }
+
+//        if (database.getSchema().needsVersionConversion()) {
+//            migrationLogger.error("Cannot perform Storage migration when the database is out of data! Please revert your configuration and restart the server!");
+//            return false;
+//        }
+
+        if (oldType != SignShopConfig.DataSourceType.YML && currentType != SignShopConfig.DataSourceType.YML
+                && oldType != SignShopConfig.DataSourceType.SQLITE && currentType != SignShopConfig.DataSourceType.SQLITE) {
+            migrationLogger.error("Unable to automatically migrate data between two external databases! Please use the `/signshop MigrateDatabase` command or migrate the database yourself.");
+
+            return false;
+        }
+
+        oldStorage.loadSellers();
+
+        // YML doesn't correct the data until the world is loaded, so make sure everything there
+        if (oldStorage instanceof YMLDataSource) {
+            try {
+                for (World world : Bukkit.getWorlds()) {
+                    WorldLoadEvent event = new WorldLoadEvent(world);
+                    Bukkit.getPluginManager().callEvent(event);
+                }
+            } catch (Exception ignored) {
+                migrationLogger.debug("Could not load worlds for YMLDataSource. Some shops may not have been loaded");
+            }
+        }
+
+        migrationLogger.info("Complete!");
+
+        return false;
+    }
 
     /**
      * LEGACY: String seperator for legacy stored data
