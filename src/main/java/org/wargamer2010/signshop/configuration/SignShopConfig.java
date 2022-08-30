@@ -41,7 +41,20 @@ public class SignShopConfig {
     //Configurables
     private static FileConfiguration config;
     private static int ConfigVersionDoNotTouch = 3;
-    private static DataSourceType DataSource = DataSourceType.YML;
+
+    private static DataSourceType DataSource = DataSourceType.SQLITE;
+
+    private static boolean UseCustomDatabaseConfig = false;
+    private static int Database_MinimumIdle = 5;
+    private static int Database_MaximumPoolSize = 10;
+    private static String Database_Host = "localhost";
+    private static int Database_Port = 3306;
+    private static String Database_DatabaseName = "signshop";
+    private static String Database_ServerName = "default";
+
+    private static String Database_Authentication_Username = "";
+    private static String Database_Authentication_Password = "";
+
     private static int MaxSellDistance = 0;
     private static int MaxShopsPerPerson = 0;
     private static int ShopCooldown = 0;
@@ -218,7 +231,20 @@ public class SignShopConfig {
         configUtil.loadYMLFromJar(ymlThing, configFilename);
 
         ConfigVersionDoNotTouch = ymlThing.getInt("ConfigVersionDoNotTouch", ConfigVersionDoNotTouch);
-        DataSource = DataSourceType.fromConfigValue(ymlThing.getString("DataSource", DataSource.configValue()));
+
+        DataSource = DataSourceType.fromConfigName(ymlThing.getString("DataSource", DataSource.getJdbcName()));
+
+        UseCustomDatabaseConfig = ymlThing.getBoolean("UseCustomDatabaseConfig");
+        Database_MinimumIdle = ymlThing.getInt("Database.MinimumIdle", Database_MinimumIdle);
+        Database_MaximumPoolSize = ymlThing.getInt("Database.MaximumPoolSize", Database_MaximumPoolSize);
+        Database_Host = ymlThing.getString("Database.Host", Database_Host);
+        Database_Port = ymlThing.getInt("Database.Port", Database_Port);
+        Database_DatabaseName = ymlThing.getString("Database.DatabaseName", Database_DatabaseName);
+        Database_ServerName = ymlThing.getString("Database.ServerName", Database_ServerName);
+
+        Database_Authentication_Username = ymlThing.getString("Database.Authentication.Username", Database_Authentication_Username);
+        Database_Authentication_Password = ymlThing.getString("Database.Authentication.Password", Database_Authentication_Password);
+
         MaxSellDistance = ymlThing.getInt("MaxSellDistance", MaxSellDistance);
         TransactionLog = ymlThing.getBoolean("TransactionLog", TransactionLog);
         Debugging = ymlThing.getBoolean("Debugging", Debugging);
@@ -707,20 +733,30 @@ public class SignShopConfig {
         return ConfigVersionDoNotTouch;
     }
 
-    public enum DataSourceType {
-        YML("yml"),
-        INTERNAL("internal"),
-        EXTERNAL_MARIADB("external_mariadb"),
-        EXTERNAL_MYSQL("external_mysql");
+    /*
+    Database Configuration
+     */
 
-        private final String configValue;
-        public String configValue() {
-            return configValue;
+    public enum DataSourceType {
+        YML("yml", "org.sqlite.SQLiteDataSource"),
+        SQLITE("sqlite", "org.sqlite.SQLiteDataSource"),
+        MARIADB("mariadb", "org.mariadb.jdbc.MariaDbDataSource"),
+        MYSQL("mysql", "com.mysql.cj.jdbc.MysqlDataSource");
+
+        private final String jdbcName;
+        private final String dataSourceClass;
+
+        public String getJdbcName() {
+            return jdbcName;
         }
 
-        public static DataSourceType fromConfigValue(String configValue) {
+        public String getDataSourceClass() {
+            return dataSourceClass;
+        }
+
+        public static DataSourceType fromConfigName(String configName) {
             for (DataSourceType type : values()) {
-                if (type.configValue().equalsIgnoreCase(configValue)) {
+                if (type.getJdbcName().equalsIgnoreCase(configName)) {
                     return type;
                 }
             }
@@ -728,13 +764,72 @@ public class SignShopConfig {
             return null;
         }
 
-        DataSourceType(String configValue) {
-            this.configValue = configValue;
+        DataSourceType(String jdbcName, String dataSourceClass) {
+            this.jdbcName = jdbcName;
+            this.dataSourceClass = dataSourceClass;
         }
+
+    }
+
+    public static boolean getUseCustomDatabaseConfig() {
+        return UseCustomDatabaseConfig;
     }
 
     public static DataSourceType getDataSource() {
         return DataSource;
+    }
+
+    public static int getDatabaseMinimumIdle() {
+        return Database_MinimumIdle;
+    }
+
+    public static int getDatabaseMaximumPoolSize() {
+        return Database_MinimumIdle;
+    }
+
+    public static String getDatabaseConnectionUrl() {
+        if (getDataSource() == DataSourceType.SQLITE || getDataSource() == DataSourceType.YML) {
+            File base;
+            try {
+                base = SignShop.getInstance().getDataFolder();
+            } catch(Exception e) {
+                base = null;
+            }
+
+            return String.format("jdbc:%s:%s",
+                    DataSourceType.SQLITE.getJdbcName(),
+                    new File(base, "signshop.db").getPath());
+        } else {
+            return String.format("jdbc:%s://%s:%d/%s",
+                    getDataSource().getJdbcName(),
+                    getDatabaseHost(),
+                    getDatabasePort(),
+                    getDatabaseDatabaseName());
+        }
+    }
+
+    public static String getDatabaseHost() {
+        return Database_Host;
+    }
+
+    public static int getDatabasePort() {
+        return Database_Port;
+    }
+
+    public static String getDatabaseDatabaseName() {
+        return Database_DatabaseName;
+    }
+
+    public static String getDatabaseServerName() {
+        return Database_ServerName;
+    }
+
+    public static String getDatabaseAuthenticationUsername() {
+        return Database_Authentication_Username;
+    }
+
+    public static String getDatabaseAuthenticationPassword() {
+        return Database_Authentication_Password;
     }
 
     public static int getMaxSellDistance() {
