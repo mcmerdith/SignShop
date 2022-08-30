@@ -1,4 +1,4 @@
-package org.wargamer2010.signshop.configuration.database.datatype;
+package org.wargamer2010.signshop.configuration.storage.database.datatype;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

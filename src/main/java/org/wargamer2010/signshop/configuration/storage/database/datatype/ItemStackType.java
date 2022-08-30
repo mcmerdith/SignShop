@@ -1,11 +1,10 @@
-package org.wargamer2010.signshop.configuration.database.datatype;
+package org.wargamer2010.signshop.configuration.storage.database.datatype;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
-import org.wargamer2010.signshop.configuration.database.DatabaseDataSource;
 import org.wargamer2010.signshop.util.SignShopLogger;
 import org.wargamer2010.signshop.util.itemUtil;
 

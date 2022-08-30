@@ -1,10 +1,9 @@
-package org.wargamer2010.signshop.configuration.database.datatype;
+package org.wargamer2010.signshop.configuration.storage.database.datatype;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.wargamer2010.signshop.util.signshopUtil;
 
 @Converter
 public class BlockConverter implements AttributeConverter<Block, Location> {

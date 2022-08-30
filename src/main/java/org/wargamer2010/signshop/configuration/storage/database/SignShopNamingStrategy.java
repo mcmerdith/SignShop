@@ -1,4 +1,4 @@
-package org.wargamer2010.signshop.configuration.database;
+package org.wargamer2010.signshop.configuration.storage.database;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
