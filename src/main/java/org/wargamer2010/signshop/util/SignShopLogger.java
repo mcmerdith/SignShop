@@ -21,11 +21,18 @@ public class SignShopLogger {
 
     private String name;
 
-    private SignShopLogger() {}
+    private SignShopLogger() {
+    }
 
+    /**
+     * Create a logger with `name` as the prefix
+     *
+     * @param name The name of the logger
+     */
     public SignShopLogger(String name) {
         this.name = name;
     }
+
     /**
      * Log an error
      *
@@ -82,7 +89,7 @@ public class SignShopLogger {
 
         Level level = (fatal) ? Level.SEVERE : Level.WARNING;
 
-        log(String.format("[%s] %s%s",
+        log(String.format("(%s) %s%s",
                 level.getName(),
                 mainMessage,
                 detailMessage.trim().isEmpty() ? "" : String.format(" (%s)", detailMessage)
@@ -111,14 +118,15 @@ public class SignShopLogger {
 
     /**
      * Log a message
+     *
      * @param message The message to log
-     * @param level The log level
+     * @param level   The log level
      */
     public void log(String message, Level level) {
-        SignShop.log("[" + name + "] " + message, level);
+        SignShop.log(((name != null && !name.trim().isEmpty()) ? String.format("[%s] ", name) : "") + message, level);
     }
 
     public void debug(String message) {
-        if (SignShopConfig.debugging()) SignShop.log(message, Level.INFO);
+        if (SignShopConfig.debugging()) log(message, Level.INFO);
     }
 }
