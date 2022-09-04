@@ -9,8 +9,9 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
-import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
 import org.wargamer2010.signshop.configuration.storage.database.datatype.*;
+import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
+import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.player.PlayerCache;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
@@ -19,6 +20,7 @@ import org.wargamer2010.signshop.util.itemUtil;
 import org.wargamer2010.signshop.util.signshopUtil;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "sellers")
@@ -33,14 +35,12 @@ public class Seller {
     private SellerExport export;
 
     @ElementCollection
-    @Convert(converter = BlockConverter.class)
-    @Type(LocationType.class)
-    private List<Block> containables;
+    @Convert(converter = LazyLocationConverter.class)
+    private List<LazyLocation> containables;
 
     @ElementCollection
-    @Convert(converter = BlockConverter.class)
-    @Type(LocationType.class)
-    private List<Block> activatables;
+    @Convert(converter = LazyLocationConverter.class)
+    private List<LazyLocation> activatables;
 
     @Type(ItemStackType.class)
     @Column(name = "items")
@@ -48,8 +48,8 @@ public class Seller {
 
     @Column(name = "sign")
     @Basic(optional = false)
-    @Type(LocationType.class)
-    private Location signLocation;
+    @Convert(converter = LazyLocationConverter.class)
+    private LazyLocation signLocation;
 
     @SuppressWarnings("JpaAttributeTypeInspection")
     @Convert(converter = MapConverter.class)
@@ -72,17 +72,17 @@ public class Seller {
     }
 
     public Seller(PlayerIdentifier playerId, String sWorld, List<Block> pContainables, List<Block> pActivatables, ItemStack[] isChestItems, Location location,
-            Map<String, String> pMiscProps, Boolean save) {
+                  Map<String, String> pMiscProps, Boolean save) {
         owner = PlayerCache.getPlayer(playerId);//new SignShopPlayer(playerId);
         world = sWorld;
 
         isItems = itemUtil.getBackupItemStack(isChestItems);
-        containables = pContainables;
-        activatables = pActivatables;
-        signLocation = location;
-        if(pMiscProps != null)
+        containables = LazyLocation.collectionOfBlockToListOf(pContainables);
+        activatables = LazyLocation.collectionOfBlockToListOf(pActivatables);
+        signLocation = new LazyLocation(location);
+        if (pMiscProps != null)
             miscProps.putAll(pMiscProps);
-        if(save)
+        if (save)
             storeMeta(isItems);
 
         calculateSerialization();
@@ -93,7 +93,7 @@ public class Seller {
     }
 
     public ItemStack[] getItems(boolean backup) {
-        if(backup)
+        if (backup)
             return itemUtil.getBackupItemStack(isItems);
         else
             return isItems;
@@ -105,20 +105,20 @@ public class Seller {
     }
 
     public List<Block> getContainables() {
-        return containables;
+        return LazyLocation.collectionOfToBlockList(containables);
     }
 
     public void setContainables(List<Block> blocklist) {
-        containables = blocklist;
+        containables = LazyLocation.collectionOfBlockToListOf(blocklist);
         calculateSerialization();
     }
 
     public List<Block> getActivatables() {
-        return activatables;
+        return LazyLocation.collectionOfToBlockList(activatables);
     }
 
     public void setActivatables(List<Block> blocklist) {
-        activatables = blocklist;
+        activatables = LazyLocation.collectionOfBlockToListOf(blocklist);
         calculateSerialization();
     }
 
@@ -154,7 +154,7 @@ public class Seller {
     }
 
     public String getMisc(String key) {
-        if(miscProps.containsKey(key))
+        if (miscProps.containsKey(key))
             return miscProps.get(key);
         return null;
     }
@@ -164,10 +164,10 @@ public class Seller {
     }
 
     public static void storeMeta(ItemStack[] stacks) {
-        if(stacks == null)
+        if (stacks == null)
             return;
-        for(ItemStack stack : stacks) {
-            if(itemUtil.isWriteableBook(stack)) {
+        for (ItemStack stack : stacks) {
+            if (itemUtil.isWriteableBook(stack)) {
                 SignShopBooks.addBook(stack);
             }
             SignShopItemMeta.storeMeta(stack);
@@ -175,7 +175,7 @@ public class Seller {
     }
 
     public String getVolatile(String key) {
-        if(volatileProperties.containsKey(key))
+        if (volatileProperties.containsKey(key))
             return volatileProperties.get(key);
         return null;
     }
@@ -185,18 +185,18 @@ public class Seller {
     }
 
     public Block getSign() {
-        return signLocation.getBlock();
+        return getSignLocation().getBlock();
     }
 
     public Location getSignLocation() {
-        return signLocation;
+        return signLocation.get();
     }
 
     public String getOperation() {
         Block block = getSign();
-        if(block == null)
+        if (block == null)
             return "";
-        if(itemUtil.clickedSign(block)) {
+        if (itemUtil.clickedSign(block)) {
             Sign sign = (Sign) block.getState();
             return signshopUtil.getOperation(sign.getLine(0));
         }
@@ -204,14 +204,16 @@ public class Seller {
     }
 
     public void reloadBlocks() {
-        List<Block> tempContainables = new LinkedList<>();
-        List<Block> tempActivatables = new LinkedList<>();
-        for(Block a : containables)
-            tempContainables.add(a.getWorld().getBlockAt(a.getX(), a.getY(), a.getZ()));
-        for(Block b : activatables)
-            tempActivatables.add(b.getWorld().getBlockAt(b.getX(), b.getY(), b.getZ()));
-        containables = tempContainables;
-        activatables = tempActivatables;
+        containables = containables.stream().map((c) -> {
+            Block block = c.get().getBlock();
+            return new LazyLocation(block.getWorld().getBlockAt(block.getX(), block.getY(), block.getZ()));
+        }).collect(Collectors.toList());
+
+        activatables = activatables.stream().map((a) -> {
+            Block block = a.get().getBlock();
+            return new LazyLocation(block.getWorld().getBlockAt(block.getX(), block.getY(), block.getZ()));
+        }).collect(Collectors.toList());
+
         calculateSerialization();
     }
 
@@ -226,47 +228,49 @@ public class Seller {
         temp.put("owner", getOwner().GetIdentifier().toString());
         temp.put("items", itemUtil.convertItemStacksToString(getItems(false)));
 
-        String[] sContainables = new String[containables.size()];
-        for(int i = 0; i < containables.size(); i++)
-            sContainables[i] = signshopUtil.convertLocationToString(containables.get(i).getLocation());
+        String[] sContainables = containables.stream().map(LazyLocation::getStringRepresentation).toArray(String[]::new);
         temp.put("containables", sContainables);
 
-        String[] sActivatables = new String[activatables.size()];
-        for(int i = 0; i < activatables.size(); i++)
-            sActivatables[i] = signshopUtil.convertLocationToString(activatables.get(i).getLocation());
+        String[] sActivatables = activatables.stream().map(LazyLocation::getStringRepresentation).toArray(String[]::new);
         temp.put("activatables", sActivatables);
 
         temp.put("sign", signshopUtil.convertLocationToString(getSignLocation()));
 
         Map<String, String> misc = miscProps;
-        if(misc.size() > 0)
+        if (misc.size() > 0)
             temp.put("misc", MapToList(misc));
 
         serializedData = temp;
     }
 
+    /**
+     * This method really doesn't need to be here. Should probably be in a util class
+     *
+     * @deprecated Will be migrated at some point
+     */
+    @Deprecated
     private List<String> MapToList(Map<String, String> map) {
         List<String> returnList = new LinkedList<>();
-        for(Map.Entry<String, String> entry : map.entrySet())
+        for (Map.Entry<String, String> entry : map.entrySet())
             returnList.add(entry.getKey() + ":" + entry.getValue());
         return returnList;
     }
 
 
-    public String getInfo(){
+    public String getInfo() {
         String newLine = "\n";
         StringBuilder sb = new StringBuilder();
         sb.append("--ShopInfo--").append(newLine)
                 .append("  Owner: ").append(owner.getName()).append(" LastSeen: ").append(SSTimeUtil.getDateTimeFromLong(owner.getOfflinePlayer().getLastPlayed())).append(newLine)
                 .append("  Sign Location: ").append(signshopUtil.convertLocationToString(getSignLocation())).append(newLine)
                 .append("  Container Locations: ");
-        for (Block block: containables){
-            sb.append("  ").append(signshopUtil.convertLocationToString(block.getLocation())).append(" ");
+        for (LazyLocation location : containables) {
+            sb.append("  ").append(location.getStringRepresentation()).append(" ");
         }
         sb.append(newLine)
                 .append("  Activatable Locations: ");
-        for (Block block: activatables){
-            sb.append("  ").append(signshopUtil.convertLocationToString(block.getLocation())).append(" ");
+        for (LazyLocation location : activatables) {
+            sb.append("  ").append(location.getStringRepresentation()).append(" ");
         }
         sb.append(newLine)
                 .append("  Misc: ");
