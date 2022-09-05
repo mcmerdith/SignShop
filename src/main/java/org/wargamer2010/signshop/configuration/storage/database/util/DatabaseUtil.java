@@ -1,17 +1,11 @@
 package org.wargamer2010.signshop.configuration.storage.database.util;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.jetbrains.annotations.NotNull;
-import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
+import org.wargamer2010.signshop.configuration.DataSourceType;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.storage.database.SignShopNamingStrategy;
-import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
-import org.wargamer2010.signshop.configuration.storage.database.models.SignShopSchema;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
 import javax.annotation.Nullable;
@@ -40,7 +34,7 @@ public class DatabaseUtil {
      * @return
      */
     public static StandardServiceRegistryBuilder configure(@NotNull StandardServiceRegistryBuilder builder) {
-        return configure(builder, null, null, SignShopConfig.getDataSource() == SignShopConfig.DataSourceType.YML || SignShopConfig.getDataSource() == SignShopConfig.DataSourceType.SQLITE);
+        return configure(builder, null, null, SignShopConfig.getDataSource() == DataSourceType.YML || SignShopConfig.getDataSource() == DataSourceType.SQLITE);
     }
 
     /**
@@ -52,7 +46,7 @@ public class DatabaseUtil {
      * @return A database builder with the specified properties
      */
     public static StandardServiceRegistryBuilder configureWithProperties(@NotNull StandardServiceRegistryBuilder builder,
-                                                                         @Nullable SignShopConfig.DataSourceType customSource,
+                                                                         @Nullable DataSourceType customSource,
                                                                          @Nullable Properties customProperties) {
         return configure(builder, customSource, customProperties, false);
     }
@@ -67,7 +61,7 @@ public class DatabaseUtil {
      * @return The configuration
      */
     public static StandardServiceRegistryBuilder configure(@NotNull StandardServiceRegistryBuilder builder,
-                                                           @Nullable SignShopConfig.DataSourceType customSource,
+                                                           @Nullable DataSourceType customSource,
                                                            @Nullable Properties customProperties,
                                                            boolean internal) {
         // Configure from hibernate.cfg.xml or Properties
@@ -97,7 +91,7 @@ public class DatabaseUtil {
      * @param customProperties         Custom properties for the databse
      * @return The configuration
      */
-    public static Properties getDatabaseWithCustomProperties(@NotNull SignShopConfig.DataSourceType type,
+    public static Properties getDatabaseWithCustomProperties(@NotNull DataSourceType type,
                                                              boolean onlyConnectionProperties,
                                                              @Nullable Properties customProperties) {
         Properties configuration = new Properties();
@@ -174,44 +168,6 @@ public class DatabaseUtil {
         MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.maintainTimeStats", String.valueOf(SignShopConfig.debugging())); // Only enable Query Time stats if we are debugging
 
         builder.applySettings(MYSQL_OPTIMIZATIONS);
-    }
-
-    /**
-     * Get a standard SessionFactory
-     *
-     * @param type     The type of database for the SessionFactory
-     * @param registry The ServiceRegistry to build the SessionFactory with
-     * @return The SessionFactory
-     */
-    public static SessionFactory getSessionFactory(@NotNull SignShopConfig.DataSourceType type, @NotNull ServiceRegistry registry) {
-        return getSessionFactory(type, registry, false);
-    }
-
-    /**
-     * Get a SessionFactory with annotated Entity classes
-     * <br>SQlite databases contain only the schema tables UNLESS the Storage type is SQlite
-     *
-     * @param type     The type of database for the SessionFactory
-     * @param registry The ServiceRegistry to build the SessionFactory with
-     * @param sqlite   If the SessionFactory is for sqltie
-     * @return The SessionFactory
-     */
-    public static SessionFactory getSessionFactory(@NotNull SignShopConfig.DataSourceType type, @NotNull ServiceRegistry registry, boolean sqlite) {
-        MetadataSources metadata = new MetadataSources(registry);
-
-        if (sqlite) {
-            // Only the schema is stored in the sqlite db
-            metadata.addAnnotatedClass(SignShopSchema.class);
-        }
-
-        if (!sqlite || SignShopConfig.getDataSource() == SignShopConfig.DataSourceType.SQLITE) {
-            // Everything else is stored in the main db (could be sqlite)
-            metadata.addAnnotatedClasses(Seller.class, SellerExport.class);
-        }
-
-        // Build the session factory. Naming strategy dictates that all tables (except `signshop_master`) will be prefixed with signshop_servername_
-        return metadata.getMetadataBuilder().applyPhysicalNamingStrategy(new SignShopNamingStrategy())
-                .build().buildSessionFactory();
     }
 
     /**
