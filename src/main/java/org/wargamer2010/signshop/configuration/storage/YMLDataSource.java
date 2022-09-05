@@ -15,15 +15,13 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
-import org.wargamer2010.signshop.configuration.FileSaveWorker;
-import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.Storage;
-import org.wargamer2010.signshop.configuration.configUtil;
+import org.wargamer2010.signshop.configuration.*;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 import org.wargamer2010.signshop.util.itemUtil;
 import org.wargamer2010.signshop.util.signshopUtil;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -44,6 +42,10 @@ public class YMLDataSource extends Storage implements Listener {
     private Map<Location, Seller> sellers;
 
     private final Map<String, HashMap<String, List<String>>> invalidShops = new LinkedHashMap<>();
+
+    public YMLDataSource() {
+        this(new File(SignShop.getInstance().getDataFolder(), "sellers.yml"));
+    }
 
     public YMLDataSource(File ymlFile) {
         fileSaveWorker = new FileSaveWorker(ymlFile);
@@ -97,6 +99,21 @@ public class YMLDataSource extends Storage implements Listener {
     }
 
     @Override
+    public DataSourceType getType() {
+        return DataSourceType.YML;
+    }
+
+    @Override
+    protected Map<Location, Seller> getSellerMap() {
+        return sellers;
+    }
+
+    @Override
+    public void dispose() {
+        fileSaveWorker.stop();
+    }
+
+    @Override
     public boolean loadSellers() {
         SignShop.log("Loading and validating shops, please wait...", Level.INFO);
         FileConfiguration yml = YamlConfiguration.loadConfiguration(ymlfile);
@@ -128,7 +145,7 @@ public class YMLDataSource extends Storage implements Listener {
     }
 
     @Override
-    public boolean saveSellers() {
+    public void saveSellers() {
         Map<String, Object> tempSellers = new HashMap<>();
         FileConfiguration config = new YamlConfiguration();
 
@@ -145,18 +162,6 @@ public class YMLDataSource extends Storage implements Listener {
         config.set("DataVersion", SignShop.DATA_VERSION);
         // We can not run the logic above async, but we can save to disc on another thread
         fileSaveWorker.queueSave(config);
-
-        return true;
-    }
-
-    @Override
-    public void dispose() {
-        fileSaveWorker.stop();
-    }
-
-    @Override
-    public int shopCount() {
-        return sellers.size();
     }
 
     @Override
@@ -167,23 +172,11 @@ public class YMLDataSource extends Storage implements Listener {
     }
 
     @Override
-    public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables, ItemStack[] isItems) {
+    public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables, @Nullable ItemStack[] isItems) {
         Seller seller = sellers.get(bSign.getLocation());
         seller.setActivatables(activatables);
         seller.setContainables(containables);
         if (isItems != null) seller.setItems(isItems);
-    }
-
-    @Override
-    public Seller getSeller(Location lKey) {
-        if (sellers.containsKey(lKey))
-            return sellers.get(lKey);
-        return null;
-    }
-
-    @Override
-    public Collection<Seller> getSellers() {
-        return Collections.unmodifiableCollection(sellers.values());
     }
 
     @Override
@@ -192,60 +185,6 @@ public class YMLDataSource extends Storage implements Listener {
             sellers.remove(lKey);
             this.saveSellers();
         }
-    }
-
-    @Override
-    public int countLocations(SignShopPlayer player) {
-        int count = 0;
-        for (Map.Entry<Location, Seller> entry : sellers.entrySet())
-            if (entry.getValue().isOwner(player)) {
-                Block bSign = Bukkit.getServer().getWorld(entry.getValue().getWorld()).getBlockAt(entry.getKey());
-                if (itemUtil.clickedSign(bSign)) {
-                    String[] sLines = ((Sign) bSign.getState()).getLines();
-                    List<String> operation = SignShopConfig.getBlocks(signshopUtil.getOperation(sLines[0]));
-                    if (operation.isEmpty())
-                        continue;
-                    // Not isOP. No need to count OP signs here because admins aren't really their owner
-                    if (!operation.contains("playerIsOp"))
-                        count++;
-                }
-            }
-        return count;
-    }
-
-    @Override
-    public List<Block> getSignsFromHolder(Block bHolder) {
-        List<Block> signs = new LinkedList<>();
-        for (Map.Entry<Location, Seller> entry : sellers.entrySet())
-            if (entry.getValue().getContainables().contains(bHolder))
-                signs.add(Bukkit.getServer().getWorld(entry.getValue().getWorld()).getBlockAt(entry.getKey()));
-        return signs;
-    }
-
-    @Override
-    public List<Seller> getShopsByBlock(Block bBlock) {
-        List<Seller> tempsellers = new LinkedList<>();
-        for (Map.Entry<Location, Seller> entry : sellers.entrySet())
-            if (entry.getValue().getActivatables().contains(bBlock) || entry.getValue().getContainables().contains(bBlock))
-                tempsellers.add(entry.getValue());
-        return tempsellers;
-    }
-
-    @Override
-    public List<Block> getShopsWithMiscSetting(String key, String value) {
-        List<Block> shops = new LinkedList<>();
-        for (Map.Entry<Location, Seller> entry : sellers.entrySet()) {
-            if (entry.getValue().hasMisc(key)) {
-                if (entry.getValue().getMisc(key).contains(value))
-                    shops.add(entry.getKey().getBlock());
-            }
-        }
-        return shops;
-    }
-
-    @Override
-    public SignShopConfig.DataSourceType getType() {
-        return SignShopConfig.DataSourceType.YML;
     }
 
     private List<String> getSetting(HashMap<String, List<String>> settings, String settingName) throws StorageException {
