@@ -25,7 +25,11 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "sellers")
 public class Seller {
-    // DB ONLY, sign location used to be PK but in the database its a blob
+
+    /*
+    Database specific stuff
+     */
+
     @Id
     @GeneratedValue(generator = "increment")
     @GenericGenerator(name = "increment", strategy = "increment")
@@ -33,6 +37,10 @@ public class Seller {
 
     @OneToOne(mappedBy = "seller")
     private SellerExport export;
+
+    /*
+    Seller class
+     */
 
     @ElementCollection
     @Convert(converter = LazyLocationConverter.class)
@@ -42,11 +50,12 @@ public class Seller {
     @Convert(converter = LazyLocationConverter.class)
     private List<LazyLocation> activatables;
 
-    @Type(ItemStackType.class)
-    @Column(name = "items")
+    @Lob
+    @Convert(converter = ItemStackConverter.class)
+    @Column(name = "items", columnDefinition = "BLOB")
     private ItemStack[] isItems;
 
-    @Column(name = "sign")
+    @Column(name = "sign", unique = true)
     @Basic(optional = false)
     @Convert(converter = LazyLocationConverter.class)
     private LazyLocation signLocation;
