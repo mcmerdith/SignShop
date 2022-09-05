@@ -5,4 +5,5 @@ import org.wargamer2010.signshop.configuration.storage.database.models.SignShopS
 public interface InternalDatabase {
     SignShopSchema getSchema();
     void saveSchema();
+    void dispose();
 }
