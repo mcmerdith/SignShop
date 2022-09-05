@@ -127,6 +127,6 @@ public class SignShopLogger {
     }
 
     public void debug(String message) {
-        if (SignShopConfig.debugging()) log(message, Level.INFO);
+        if (SignShopConfig.debugging()) log("[debug] " + message, Level.INFO);
     }
 }
