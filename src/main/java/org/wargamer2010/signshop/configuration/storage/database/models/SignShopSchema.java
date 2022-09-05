@@ -3,6 +3,7 @@ package org.wargamer2010.signshop.configuration.storage.database.models;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.wargamer2010.signshop.SignShop;
+import org.wargamer2010.signshop.configuration.DataSourceType;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
 import org.wargamer2010.signshop.configuration.storage.database.datatype.MapConverter;
@@ -47,7 +48,7 @@ public class SignShopSchema {
 
     @Enumerated(value = EnumType.STRING)
     @Basic(optional = false)
-    private SignShopConfig.DataSourceType dataSource;
+    private DataSourceType dataSource;
 
     @SuppressWarnings("JpaAttributeTypeInspection")
     @Convert(converter = MapConverter.class)
@@ -65,7 +66,7 @@ public class SignShopSchema {
         this.databaseVersion = databaseVersion;
     }
 
-    public void setDataSource(SignShopConfig.DataSourceType dataSource) {
+    public void setDataSource(DataSourceType dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -94,7 +95,7 @@ public class SignShopSchema {
     /**
      * @return The Storage implementation used last time SignShop was running
      */
-    public SignShopConfig.DataSourceType getDataSource() {
+    public DataSourceType getDataSource() {
         return dataSource;
     }
 
@@ -144,7 +145,7 @@ public class SignShopSchema {
 
         // Current session info
         int CURRENT_VERSION = DatabaseDataSource.DATABASE_VERSION;
-        SignShopConfig.DataSourceType CURRENT_SOURCE = SignShopConfig.getDataSource();
+        DataSourceType CURRENT_SOURCE = SignShopConfig.getDataSource();
         Properties CURRENT_CONNECTION = DatabaseUtil.getDatabaseProperties(true);
 
 
@@ -212,7 +213,7 @@ public class SignShopSchema {
      * @param dataSource           The Storage implementation used last time SignShop was running
      * @param connectionProperties The last url that was used to connect to the database
      */
-    public SignShopSchema(String server, int databaseVersion, SignShopConfig.DataSourceType dataSource, Properties connectionProperties) {
+    public SignShopSchema(String server, int databaseVersion, DataSourceType dataSource, Properties connectionProperties) {
         this.server = server;
         this.databaseVersion = databaseVersion;
         this.dataSource = dataSource;
