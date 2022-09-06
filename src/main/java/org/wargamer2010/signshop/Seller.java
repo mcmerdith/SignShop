@@ -5,11 +5,15 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
-import org.wargamer2010.signshop.configuration.storage.database.datatype.*;
+import org.wargamer2010.signshop.configuration.storage.database.datatype.ItemStackConverter;
+import org.wargamer2010.signshop.configuration.storage.database.datatype.LazyLocationConverter;
+import org.wargamer2010.signshop.configuration.storage.database.datatype.MapConverter;
+import org.wargamer2010.signshop.configuration.storage.database.datatype.SignShopPlayerConverter;
 import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.player.PlayerCache;
@@ -43,10 +47,12 @@ public class Seller {
      */
 
     @ElementCollection
+    @Fetch(FetchMode.JOIN)
     @Convert(converter = LazyLocationConverter.class)
     private List<LazyLocation> containables;
 
     @ElementCollection
+    @Fetch(FetchMode.JOIN)
     @Convert(converter = LazyLocationConverter.class)
     private List<LazyLocation> activatables;
 
@@ -60,8 +66,9 @@ public class Seller {
     @Convert(converter = LazyLocationConverter.class)
     private LazyLocation signLocation;
 
-    @SuppressWarnings("JpaAttributeTypeInspection")
+    @Lob
     @Convert(converter = MapConverter.class)
+    @Column(columnDefinition = "VARCHAR(10000)")
     private Map<String, String> miscProps = new HashMap<>();
 
     @Transient
