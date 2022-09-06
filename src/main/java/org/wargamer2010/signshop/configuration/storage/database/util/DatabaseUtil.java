@@ -17,6 +17,39 @@ import java.util.Map;
 import java.util.Properties;
 
 public class DatabaseUtil {
+    private static final Properties hibernateConfigurationBase = new Properties();
+    private static final Properties sqliteProperties = new Properties();
+    private static final Map<String, Object> MYSQL_OPTIMIZATIONS = new HashMap<>();
+
+    public static final String HIBERNATE_URL_KEY = "hibernate.hikari.dataSource.url";
+
+    static {
+        // Build the static parameters
+        hibernateConfigurationBase.put("hibernate.current_session_context_class", "thread");
+        hibernateConfigurationBase.put("hibernate.hbm2ddl.auto", Action.UPDATE.getExternalHbm2ddlName());
+
+        sqliteProperties.putAll(hibernateConfigurationBase);
+        sqliteProperties.put("hibernate.connection.driver_class", "org.sqlite.JDBC");
+        try {
+            sqliteProperties.put("hibernate.connection.url", "jdbc:sqlite:" +
+                    new File(SignShop.getInstance().getDataFolder(), "signshop.db").getPath());
+        } catch (Exception e) {
+            SignShopLogger.getDatabaseLogger().error("Unable to reserve file 'signshop.db' in the plugin folder!");
+            sqliteProperties.put("hibernate.connection.url", "jdbc:sqlite:signshop.db");
+        }
+
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.prepStmtCacheSize", "250");
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.prepStmtCacheSqlLimit", "2048");
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.cachePrepStmts", "true");
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.useServerPrepStmts", "true");
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.useLocalSessionState", "true");
+//        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.rewriteBatchedStatements", true); Hibernate should already be doing this
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.cacheResultSetMetadata", "true");
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.cacheServerConfiguration", "true");
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.elideSetAutoCommits", "true");
+        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.maintainTimeStats", String.valueOf(SignShopConfig.debugging())); // Only enable Query Time stats if we are debugging
+    }
+
     /**
      * Configure the database builder for SQLite
      *
@@ -24,31 +57,21 @@ public class DatabaseUtil {
      * @return A SQLite database builder
      */
     public static StandardServiceRegistryBuilder configureInternal(@NotNull StandardServiceRegistryBuilder builder) {
-        return configure(builder, null, null, true);
+        return builder.applySettings(sqliteProperties);
     }
 
     /**
      * Configure the database builder
      *
-     * @param builder
-     * @return
+     * @param builder Builder to configure
+     * @return A database builder
      */
     public static StandardServiceRegistryBuilder configure(@NotNull StandardServiceRegistryBuilder builder) {
-        return configure(builder, null, null, SignShopConfig.getDataSource() == DataSourceType.YML || SignShopConfig.getDataSource() == DataSourceType.SQLITE);
-    }
-
-    /**
-     * Configure a database builder with custom properties
-     *
-     * @param builder          Builder to configure
-     * @param customSource     The source to apply the custom properties to
-     * @param customProperties Custom properties to apply
-     * @return A database builder with the specified properties
-     */
-    public static StandardServiceRegistryBuilder configureWithProperties(@NotNull StandardServiceRegistryBuilder builder,
-                                                                         @Nullable DataSourceType customSource,
-                                                                         @Nullable Properties customProperties) {
-        return configure(builder, customSource, customProperties, false);
+        if (SignShopConfig.getDataSource().isExternal()) {
+            return configure(builder, null, null);
+        } else {
+            return configureInternal(builder);
+        }
     }
 
     /**
@@ -57,16 +80,13 @@ public class DatabaseUtil {
      * @param builder          Builder to configure
      * @param customSource     The source to apply the custom properties to
      * @param customProperties Custom properties to apply, does nothing if internal is set
-     * @param internal         If the database is a sqlite database
-     * @return The configuration
+     * @return A database builder with the specified properties
      */
     public static StandardServiceRegistryBuilder configure(@NotNull StandardServiceRegistryBuilder builder,
                                                            @Nullable DataSourceType customSource,
-                                                           @Nullable Properties customProperties,
-                                                           boolean internal) {
+                                                           @Nullable Properties customProperties) {
         // Configure from hibernate.cfg.xml or Properties
-        return (internal) ? builder.configure()
-                : builder.applySettings(
+        return builder.applySettings(
                 customSource != null && customProperties != null // Must have both to be able to apply properties
                         ? getDatabaseWithCustomProperties(customSource, false, customProperties)
                         : getDatabaseProperties(false)
@@ -96,9 +116,7 @@ public class DatabaseUtil {
                                                              @Nullable Properties customProperties) {
         Properties configuration = new Properties();
 
-        // Configure Hibernate
-        configuration.put("hibernate.current_session_context_class", "thread");
-        configuration.put("hibernate.hbm2ddl.auto", Action.UPDATE.getExternalHbm2ddlName());
+        configuration.putAll(hibernateConfigurationBase);
 
         // Using Hikari
         configuration.put("hibernate.connection.provider_class", "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
@@ -111,12 +129,17 @@ public class DatabaseUtil {
         // Load the custom properties or default properties
         if (customProperties == null) {
             // Auth: don't add blank paramaters or hibernate might get confused
+            String userKey = "hibernate.hikari.dataSource.user";
+            String passKey = "hibernate.hikari.dataSource.password";
+
             String user = SignShopConfig.getDatabaseAuthenticationUsername();
             String password = SignShopConfig.getDatabaseAuthenticationPassword();
+
             if (user != null && !user.trim().isEmpty())
-                configuration.put("hibernate.hikari.dataSource.user", user);
+                configuration.put(userKey, user);
+
             if (password != null && !password.trim().isEmpty())
-                configuration.put("hibernate.hikari.dataSource.password", password);
+                configuration.put(passKey, password);
 
             // Read the custom configuration (if enabled)
             if (SignShopConfig.getUseCustomDatabaseConfig()) {
@@ -131,16 +154,18 @@ public class DatabaseUtil {
             }
 
             // Push the remaining args in without overwriting or duplicating
-            String urlKey = "hibernate.hikari.dataSource.url";
-
             // We need a URL
-            if (!configuration.containsKey(urlKey))
-                configuration.put(urlKey, SignShopConfig.getDatabaseConnectionUrl());
+            if (!configuration.containsKey(HIBERNATE_URL_KEY))
+                configuration.put(HIBERNATE_URL_KEY, SignShopConfig.getDatabaseConnectionUrl());
 
             if (onlyConnectionProperties) {
-                Properties connection = new Properties();
-                connection.put(urlKey, configuration.get(urlKey).toString());
-                return connection;
+                // Build the connectionProperties
+                Properties connectionProperties = new Properties();
+                if (configuration.containsKey(userKey)) connectionProperties.put(userKey, configuration.get(userKey));
+                if (configuration.containsKey(passKey)) connectionProperties.put(passKey, configuration.get(passKey));
+                connectionProperties.put(HIBERNATE_URL_KEY, configuration.get(HIBERNATE_URL_KEY));
+
+                return connectionProperties;
             }
         } else {
             configuration.putAll(customProperties);
@@ -155,18 +180,6 @@ public class DatabaseUtil {
      * @param builder The builder to apply the settings to
      */
     public static void applyMySqlOptimizations(@NotNull StandardServiceRegistryBuilder builder) {
-        Map<String, Object> MYSQL_OPTIMIZATIONS = new HashMap<>();
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.prepStmtCacheSize", "250");
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.prepStmtCacheSqlLimit", "2048");
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.cachePrepStmts", "true");
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.useServerPrepStmts", "true");
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.useLocalSessionState", "true");
-//        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.rewriteBatchedStatements", true); Hibernate should already be doing this
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.cacheResultSetMetadata", "true");
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.cacheServerConfiguration", "true");
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.elideSetAutoCommits", "true");
-        MYSQL_OPTIMIZATIONS.put("hibernate.hikari.dataSource.maintainTimeStats", String.valueOf(SignShopConfig.debugging())); // Only enable Query Time stats if we are debugging
-
         builder.applySettings(MYSQL_OPTIMIZATIONS);
     }
 
@@ -181,8 +194,25 @@ public class DatabaseUtil {
      * @param current  The current database properties
      * @return If the state between previous and current is valid
      */
-    public static boolean isConnectionChangeInvalid(Properties previous, Properties current) {
-        return (current == null && previous != null) ||
-                (current != null && previous != null && !current.equals(previous));
+    public static boolean isConnectionChangeOkay(Properties previous, Properties current) {
+        // Connection is OK if both are null
+        if (previous == null) return true;
+
+        // Connection is not OK if previous != null and current == null
+        if (current == null) return false;
+
+        if (!current.containsKey(HIBERNATE_URL_KEY) || !previous.containsKey(HIBERNATE_URL_KEY)) return false;
+
+        Object prev = previous.get(HIBERNATE_URL_KEY);
+        Object curr = current.get(HIBERNATE_URL_KEY);
+
+        // Connection is OK if both are null
+        if (prev == null) return true;
+
+        // Connection is not OK if prev != null and curr == null
+        if (curr == null) return false;
+
+        // Connection is ok if the URLs match
+        return prev.equals(current);
     }
 }
