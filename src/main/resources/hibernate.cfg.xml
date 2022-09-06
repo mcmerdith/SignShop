@@ -1,8 +1,0 @@
-<hibernate-configuration>
-    <session-factory>
-        <property name="hibernate.hbm2ddl.auto">update</property>
-        <property name="hibernate.current_session_context_class">thread</property>
-        <property name="hibernate.connection.driver_class">org.sqlite.JDBC</property>
-        <property name="hibernate.connection.url">jdbc:sqlite:signshop.db</property>
-    </session-factory>
-</hibernate-configuration>
