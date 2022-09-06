@@ -18,40 +18,17 @@ import java.util.Properties;
 
 public class SSSessionFactory {
     /*
-    Singleton implementation
-     */
-
-    private static SSSessionFactory _instance;
-
-    public static SSSessionFactory instance() {
-        if (_instance == null) _instance = new SSSessionFactory();
-        return _instance;
-    }
-
-    private SSSessionFactory() {
-        // Singleton constructor
-    }
-
-    /*
     Session Factory
      */
 
-    private final SignShopLogger logger = new SignShopLogger("SessionFactory");
+    private static final SignShopLogger logger = SignShopLogger.getLogger("Session Factory");
 
-    private SessionFactory sessionFactory;
-    private SessionFactory sqliteFactory;
-
-
-    public SessionFactory getSqliteFactory(DataSourceType type) {
-        // Don't make more than 1
-        if (sqliteFactory != null) return sqliteFactory;
-
+    public static SessionFactory getSqliteFactory(DataSourceType type) {
         final StandardServiceRegistry sqliteRegistry = DatabaseUtil.configureInternal(new StandardServiceRegistryBuilder()).build();
 
         try {
             // Only prepare the schema if we're not using SQLite for the main database
-            sqliteFactory = getSessionFactory(type, sqliteRegistry, true);
-            return sqliteFactory;
+            return getSessionFactory(type, sqliteRegistry, true);
         } catch (Exception e) {
             StandardServiceRegistryBuilder.destroy(sqliteRegistry);
             throw logger.exception(e, "Failed to connect to SQLite database!", true);
@@ -64,10 +41,7 @@ public class SSSessionFactory {
      * @return The SessionFactory
      * @throws IllegalStateException If the database fails to connect
      */
-    public SessionFactory getDatabaseFactory(DataSourceType type, Properties customProperties) {
-        // Don't make more than 1
-        if (sessionFactory != null) return sessionFactory;
-
+    public static SessionFactory getDatabaseFactory(DataSourceType type, Properties customProperties) {
         // Load the database if necessary
         if (type == DataSourceType.YML) {
             // We are not using a database for storage
@@ -80,7 +54,7 @@ public class SSSessionFactory {
                 // If we are using SQLite we can reuse the SQLite SessionFactory
                 return getSqliteFactory(type);
             } else {
-                StandardServiceRegistryBuilder mainDatabaseBuilder = DatabaseUtil.configureWithProperties(new StandardServiceRegistryBuilder(), type, customProperties);
+                StandardServiceRegistryBuilder mainDatabaseBuilder = DatabaseUtil.configure(new StandardServiceRegistryBuilder(), type, customProperties);
 
                 // Optimize pure MySql
                 if (type == DataSourceType.MYSQL)
@@ -93,7 +67,7 @@ public class SSSessionFactory {
                     return getSessionFactory(type, mainRegistry);
                 } catch (Exception e) {
                     StandardServiceRegistryBuilder.destroy(mainRegistry);
-                    throw logger.exception(e, "Failed to connect to " + type.name() + "database!", true);
+                    throw logger.exception(e, "Failed to connect to " + type.name() + " database!", true);
                 }
             }
         }
@@ -107,7 +81,7 @@ public class SSSessionFactory {
      * @param registry The ServiceRegistry to build the SessionFactory with
      * @return The SessionFactory
      */
-    public SessionFactory getSessionFactory(@NotNull DataSourceType type, @NotNull ServiceRegistry registry) {
+    public static SessionFactory getSessionFactory(@NotNull DataSourceType type, @NotNull ServiceRegistry registry) {
         return getSessionFactory(type, registry, false);
     }
 
@@ -120,7 +94,7 @@ public class SSSessionFactory {
      * @param sqlite   If the SessionFactory is for sqltie
      * @return The SessionFactory
      */
-    public SessionFactory getSessionFactory(@NotNull DataSourceType type, @NotNull ServiceRegistry registry, boolean sqlite) {
+    public static SessionFactory getSessionFactory(@NotNull DataSourceType type, @NotNull ServiceRegistry registry, boolean sqlite) {
         MetadataSources metadata = new MetadataSources(registry);
 
         if (sqlite) {
@@ -128,7 +102,7 @@ public class SSSessionFactory {
             metadata.addAnnotatedClass(SignShopSchema.class);
         }
 
-        if (!sqlite || SignShopConfig.getDataSource() == DataSourceType.SQLITE) {
+        if (!sqlite || type == DataSourceType.SQLITE) {
             // Everything else is stored in the main db (could be sqlite)
             metadata.addAnnotatedClasses(Seller.class, SellerExport.class);
         }
