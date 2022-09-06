@@ -60,20 +60,21 @@ public class YMLDataSource extends Storage implements Listener {
         ymlfile = ymlFile;
         sellers = new HashMap<>();
 
-        // Load into memory, this also removes invalid signs (hence the backup)
-        boolean needToSave = loadSellers();
-
-        if (needToSave) {
-            File backupTo = new File(ymlFile.getPath() + ".bak");
-            if (backupTo.exists())
-                backupTo.delete();
-            try {
-                copyFile(ymlFile, backupTo);
-            } catch (IOException ex) {
-                SignShop.log(SignShopConfig.getError("backup_fail", null), Level.WARNING);
-            }
-            saveSellers();
-        }
+//        DataSources no longer call their own load functions
+//        // Load into memory, this also removes invalid signs (hence the backup)
+//        boolean needToSave = loadSellers();
+//
+//        if (needToSave) {
+//            File backupTo = new File(ymlFile.getPath() + ".bak");
+//            if (backupTo.exists())
+//                backupTo.delete();
+//            try {
+//                copyFile(ymlFile, backupTo);
+//            } catch (IOException ex) {
+//                SignShop.log(SignShopConfig.getError("backup_fail", null), Level.WARNING);
+//            }
+//            saveSellers();
+//        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -196,13 +197,17 @@ public class YMLDataSource extends Storage implements Listener {
     }
 
     private boolean loadSellerFromSettings(String key, HashMap<String, List<String>> sellerSettings) {
-        Block seller_sign;
+//        seller_owner.GetIdentifier(), seller_shopworld, seller_sign, seller_containables, seller_activatables, seller_items, miscsettings
+
         SignShopPlayer seller_owner;
-        List<Block> seller_activatables;
-        List<Block> seller_containables;
+//        PlayerIdentifier seller_owner;
         String seller_shopworld;
+        Block seller_sign;
+        List<Block> seller_containables;
+        List<Block> seller_activatables;
         ItemStack[] seller_items;
         Map<String, String> miscsettings;
+
         StorageException storageex = new StorageException();
 
         List<String> tempList;
@@ -212,17 +217,25 @@ public class YMLDataSource extends Storage implements Listener {
                 throw storageex;
             seller_shopworld = tempList.get(0);
             storageex.setWorld(seller_shopworld);
+
+            // World exists check
             if (Bukkit.getServer().getWorld(seller_shopworld) == null)
                 throw storageex;
+
             tempList = getSetting(sellerSettings, "owner");
             if (tempList.isEmpty())
                 throw storageex;
             seller_owner = PlayerIdentifier.getPlayerFromString(tempList.get(0));
             if (seller_owner == null)
                 throw storageex;
+
             tempList = getSetting(sellerSettings, "sign");
             if (tempList.isEmpty())
                 throw storageex;
+
+//            seller_shopworld = getSetting(sellerSettings, "shopworld").stream().findFirst().orElse(null);
+//            seller_owner = getSetting(sellerSettings, "owner").stream().findFirst()
+//                    .map(UUID::fromString).map(PlayerIdentifier::new).orElse(null);
 
             World world = Bukkit.getServer().getWorld(seller_shopworld);
 
