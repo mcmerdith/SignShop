@@ -6,7 +6,7 @@ import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.DataSourceType;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
-import org.wargamer2010.signshop.configuration.storage.database.datatype.MapConverter;
+import org.wargamer2010.signshop.configuration.storage.database.datatype.PropertiesConverter;
 import org.wargamer2010.signshop.configuration.storage.database.util.DatabaseUtil;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
@@ -51,7 +51,7 @@ public class SignShopSchema {
     private DataSourceType dataSource;
 
     @SuppressWarnings("JpaAttributeTypeInspection")
-    @Convert(converter = MapConverter.class)
+    @Convert(converter = PropertiesConverter.class)
     private Properties connectionProperties;
 
     /*
@@ -106,10 +106,6 @@ public class SignShopSchema {
         return connectionProperties;
     }
 
-    private boolean isNewConnectionInvalid(Properties newConnection) {
-        return DatabaseUtil.isConnectionChangeInvalid(connectionProperties, newConnection);
-    }
-
     /*
     Validation
      */
@@ -141,7 +137,7 @@ public class SignShopSchema {
     public boolean validate() {
         boolean changed = false;
 
-        SignShopLogger logger = new SignShopLogger("Validation");
+        SignShopLogger logger = SignShopLogger.getLogger("Validation");
 
         // Current session info
         int CURRENT_VERSION = DatabaseDataSource.DATABASE_VERSION;
@@ -164,13 +160,13 @@ public class SignShopSchema {
 
 
         // Validate that we are connected to the same database
-        if (isNewConnectionInvalid(CURRENT_CONNECTION)) {
+        if (!DatabaseUtil.isConnectionChangeOkay(connectionProperties, CURRENT_CONNECTION)) {
             connectionOK = false;
             logger.error("Database connection information does not match last session! The database likely needs a migration!");
             logger.info("   Saving migration data to database_migration.properties... Please migrate the database yourself, or try the '/signshop MigrateDatabase' command");
 
             try {
-                File migrationData = new File(SignShop.getInstance().getDataFolder(), "database_migration.properties");
+                File migrationData = new File(SignShop.getInstance().getDataFolder(), String.format("database_migration%d.properties", System.currentTimeMillis()));
                 FileOutputStream fs = new FileOutputStream(migrationData);
                 connectionProperties.store(fs, "Migration Data");
                 fs.close();
