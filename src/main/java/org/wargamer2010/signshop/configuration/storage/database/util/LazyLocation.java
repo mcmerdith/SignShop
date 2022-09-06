@@ -14,6 +14,7 @@ public class LazyLocation {
 
     /**
      * Lazy-initialize this location
+     *
      * @param locationString The string representing the {@link Location} object
      */
     public LazyLocation(String locationString) {
@@ -22,6 +23,7 @@ public class LazyLocation {
 
     /**
      * Immediately initialize this location
+     *
      * @param location The Location
      */
     public LazyLocation(Location location) {
@@ -31,6 +33,7 @@ public class LazyLocation {
 
     /**
      * Immediately initialize this location
+     *
      * @param block The Block
      */
     public LazyLocation(Block block) {
@@ -39,6 +42,7 @@ public class LazyLocation {
 
     /**
      * Get the string form of this location as defined by {@link signshopUtil#convertLocationToString(Location)}
+     *
      * @return The location this object represents formatted as "x/y/z/world"
      */
     public String getStringRepresentation() {
@@ -47,6 +51,7 @@ public class LazyLocation {
 
     /**
      * Get the {@link Location} this object represents
+     *
      * @return The location represented by this object
      */
     public Location get() {
@@ -57,6 +62,7 @@ public class LazyLocation {
 
     /**
      * Get the {@link Block} at the {@link Location} this object represents
+     *
      * @return The block at the location represented by this object
      */
     public Block getBlock() {
@@ -65,6 +71,7 @@ public class LazyLocation {
 
     /**
      * Unwrap a {@link Collection} of {@link LazyLocation}s
+     *
      * @param collection The collection to unwrap
      * @return The unwrapped collection
      */
@@ -74,6 +81,7 @@ public class LazyLocation {
 
     /**
      * Wrap a {@link Collection} of {@link Block}s in {@link LazyLocation}s
+     *
      * @param collection The collection to wrap
      * @return The wrapped collection
      */
@@ -83,6 +91,7 @@ public class LazyLocation {
 
     /**
      * Unwrap a {@link Collection} of {@link LazyLocation}s
+     *
      * @param collection The collection to unwrap
      * @return The unwrapped collection
      */
@@ -92,10 +101,19 @@ public class LazyLocation {
 
     /**
      * Wrap a {@link Collection} of {@link Block}s in {@link LazyLocation}s
+     *
      * @param collection The collection to wrap
      * @return The wrapped collection
      */
     public static List<LazyLocation> collectionOfLocationToListOf(Collection<Location> collection) {
         return collection.stream().map(LazyLocation::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof LazyLocation)) return false;
+        LazyLocation otherLocation = (LazyLocation) obj;
+
+        return otherLocation.locationString.equals(locationString);
     }
 }
