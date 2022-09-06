@@ -15,7 +15,7 @@ public class MapConverter implements AttributeConverter<Map<String, String>, Str
 
     @Override
     public String convertToDatabaseColumn(Map<String, String> stringStringMap) {
-        if (stringStringMap == null) return null;
+        if (stringStringMap == null) return "";
 
         List<String> entries = new ArrayList<>();
 
@@ -26,9 +26,9 @@ public class MapConverter implements AttributeConverter<Map<String, String>, Str
 
     @Override
     public Map<String, String> convertToEntityAttribute(String s) {
-        if (s == null) return null;
-
         Map<String, String> output = new HashMap<>();
+
+        if (s == null) return output;
 
         String[] entries = s.split(entryDelimeter);
         for (String entry : entries) {
