@@ -663,13 +663,13 @@ public class TestServer implements Server {
     @NotNull
     @Override
     public BlockData createBlockData(@NotNull Material material) {
-        return new TestBlockData(material);
+        return new TestBlockData(material, null);
     }
 
     @NotNull
     @Override
     public BlockData createBlockData(@NotNull Material material, @Nullable Consumer<BlockData> consumer) {
-        BlockData data = new TestBlockData(material);
+        BlockData data = new TestBlockData(material, null);
         if (consumer != null) consumer.accept(data);
         return data;
     }
@@ -683,7 +683,8 @@ public class TestServer implements Server {
     @NotNull
     @Override
     public BlockData createBlockData(@Nullable Material material, @Nullable String data) throws IllegalArgumentException {
-        return new TestBlockData(material);
+        if (material == null) return TestBlockData.fromString(data);
+        return TestBlockData.fromString(String.format("minecraft:%s%s", material.name(), (data == null) ? "" : "[" + data + "]"));
     }
 
     @Nullable
