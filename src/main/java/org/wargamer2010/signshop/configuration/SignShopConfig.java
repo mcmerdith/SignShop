@@ -754,7 +754,7 @@ public class SignShopConfig {
     }
 
     public static String getDatabaseConnectionUrl() {
-        if (getDataSource() == DataSourceType.SQLITE || getDataSource() == DataSourceType.YML) {
+        if (!getDataSource().isExternal()) {
             File base;
             try {
                 base = SignShop.getInstance().getDataFolder();
