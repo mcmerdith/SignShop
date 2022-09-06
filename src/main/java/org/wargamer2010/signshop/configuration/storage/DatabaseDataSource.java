@@ -8,21 +8,25 @@ import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.query.Query;
 import org.wargamer2010.signshop.Seller;
+import org.wargamer2010.signshop.configuration.DataSourceType;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
 import org.wargamer2010.signshop.configuration.Storage;
 import org.wargamer2010.signshop.configuration.storage.database.InternalDatabase;
+import org.wargamer2010.signshop.configuration.storage.database.SSSessionFactory;
 import org.wargamer2010.signshop.configuration.storage.database.models.SignShopSchema;
-import org.wargamer2010.signshop.configuration.storage.database.util.DatabaseUtil;
+import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.configuration.storage.database.util.SSQueryBuilder;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
-import org.wargamer2010.signshop.player.SignShopPlayer;
 import org.wargamer2010.signshop.util.SignShopLogger;
+import org.wargamer2010.signshop.util.signshopUtil;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 public class DatabaseDataSource extends Storage implements InternalDatabase {
     private static final SignShopLogger logger = SignShopLogger.getDatabaseLogger();
@@ -32,7 +36,7 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
     public final SessionFactory sessionFactory;
     public final SessionFactory sqliteFactory;
 
-    private final SignShopConfig.DataSourceType type;
+    private final DataSourceType type;
     private final Properties customProperties;
 
     /**
@@ -51,12 +55,14 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
      *
      * @throws IllegalStateException If the database is unavailable
      */
-    public DatabaseDataSource(SignShopConfig.DataSourceType dataSource, Properties customProperties) throws IllegalStateException {
+    public DatabaseDataSource(DataSourceType dataSource, Properties properties) throws IllegalStateException {
         this.type = dataSource;
-        this.customProperties = customProperties;
+        this.customProperties = properties;
+
+        logger.info("Initializing new Transfer DatabaseDataSource for " + type.name());
 
         sqliteFactory = null;
-        sessionFactory = getSessionFactory();
+        sessionFactory = SSSessionFactory.getDatabaseFactory(type, customProperties);
         schema = null;
     }
 
@@ -65,95 +71,34 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
      *
      * @throws IllegalStateException If the database is unavailable
      */
-    public DatabaseDataSource(SignShopConfig.DataSourceType pluginDataSource) throws IllegalStateException {
+    public DatabaseDataSource(DataSourceType pluginDataSource) throws IllegalStateException {
         this.type = pluginDataSource;
         this.customProperties = null;
 
         // Build our sqLite database. Default SQLite config is available on the classpath as "hibernate.cfg.xml"
         // This will become the final database if using SQLite, otherwise it will be disposed of after reading the schema
-        sqliteFactory = getSqliteFactory();
+        sqliteFactory = SSSessionFactory.getSqliteFactory(type);
 
         logger.info("Loading and validating schema...");
 
         // Attempt to load the schema
-        schema = readSchema();
+        schema = getSchema();
 
         // Save the schema if the validator updates it
         if (schema.validate()) saveSchema();
 
-//        if (schema.needsVersionConversion()) {
-//            SignShopLogger conversionLogger = new SignShopLogger("Database Converter");
-//
-//            conversionLogger.info("Converting data from v" + schema.getDatabaseVersion() + " to v" + DATABASE_VERSION);
-//            conversionLogger.info("Complete!");
-//        }
-
-        sessionFactory = getSessionFactory();
+        sessionFactory = SSSessionFactory.getDatabaseFactory(type, null);
     }
 
-    private SessionFactory getSqliteFactory() {
-        // Don't make more than 1
-        if (sqliteFactory != null) return sqliteFactory;
-
-        final StandardServiceRegistry sqLiteRegistry = DatabaseUtil.configureInternal(new StandardServiceRegistryBuilder()).build();
-
-        try {
-            // Only prepare the schema if we're not using SQLite for the main database
-            return DatabaseUtil.getSessionFactory(type, sqLiteRegistry, true);
-        } catch (Exception e) {
-            StandardServiceRegistryBuilder.destroy(sqLiteRegistry);
-            throw logger.exception(e, "Failed to connect to SQLite database!", true);
-        }
-    }
-
-    /**
-     * Get a database SessionFactory
-     *
-     * @return The SessionFactory
-     * @throws IllegalStateException If the database fails to connect
-     */
-    private SessionFactory getSessionFactory() {
-        // Don't make more than 1
-        if (sessionFactory != null) return sessionFactory;
-
-        // Load the database if necessary
-        if (type == SignShopConfig.DataSourceType.YML) {
-            // We are not using a database for storage
-            return null;
-        } else {
-            // We are using a database, prep it
-            logger.info("Loading " + type.name() + " database...");
-
-            if (type == SignShopConfig.DataSourceType.SQLITE) {
-                // If we are using SQLite we can reuse the SQLite SessionFactory
-                return getSqliteFactory();
-            } else {
-                StandardServiceRegistryBuilder mainDatabaseBuilder = DatabaseUtil.configureWithProperties(new StandardServiceRegistryBuilder(), type, customProperties);
-
-                // Optimize pure MySql
-                if (type == SignShopConfig.DataSourceType.MYSQL)
-                    DatabaseUtil.applyMySqlOptimizations(mainDatabaseBuilder);
-
-                // Build the SessionFactory
-                final StandardServiceRegistry mainRegistry = mainDatabaseBuilder.build();
-
-                try {
-                    return DatabaseUtil.getSessionFactory(type, mainRegistry);
-                } catch (Exception e) {
-                    StandardServiceRegistryBuilder.destroy(mainRegistry);
-                    throw logger.exception(e, "Failed to connect to " + type.name() + "database!", true);
-                }
-            }
-        }
-    }
 
     @Override
-    public SignShopConfig.DataSourceType getType() {
+    public DataSourceType getType() {
         return type;
     }
 
     /**
      * Get the properties associated with the database
+     *
      * @return The database custom properties, or null if they are not configured
      */
     public Properties getCustomProperties() {
@@ -165,111 +110,160 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
      */
 
     @Override
-    public boolean loadSellers() {
-        try (Session session = sessionFactory.getCurrentSession()) {
-            // Begin transaction on the database
-            session.beginTransaction();
-
-            // Get the sellers
-            List<Seller> tempSellers = session.createQuery("from Seller ", Seller.class).getResultList();
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean saveSellers() {
-        return false;
+    protected Map<Location, Seller> getSellerMap() {
+        return sellers;
     }
 
     @Override
     public void dispose() {
         // dispose of session
+        if (sqliteFactory != null && !sqliteFactory.isClosed()) sqliteFactory.close();
         if (sessionFactory != null && !sessionFactory.isClosed()) sessionFactory.close();
     }
 
     @Override
-    public int shopCount() {
+    public boolean loadSellers() {
         if (internalFunctionsOnly())
             throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        return sellers.size();
+
+        try (Session session = sessionFactory.getCurrentSession()) {
+            // Begin transaction on the database
+            session.beginTransaction();
+
+            // Get the sellers
+            List<Seller> tempSellers = session.createQuery("from Seller", Seller.class).getResultList();
+
+            for (Seller seller : tempSellers) sellers.put(seller.getSignLocation(), seller);
+
+            logger.info(String.format("Loaded %d shops!", shopCount()));
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.exception(e, "Failed to load sellers from database");
+            return false;
+        }
+    }
+
+    @Override
+    public void saveSellers() {
+        if (internalFunctionsOnly())
+            throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
+
+
+        for (Seller seller : sellers.values()) {
+            try (Session session = sessionFactory.getCurrentSession()) {
+                try {
+                    session.getTransaction().begin();
+                    if (!session.contains(seller)) session.merge(seller);
+                } catch (Exception e) {
+                    session.getTransaction().rollback();
+                    logger.exception(e, String.format("Failed to save seller at %s to database",
+                            signshopUtil.convertLocationToString(seller.getSignLocation())));
+                }
+                session.getTransaction().commit();
+            } catch (Exception e) {
+                logger.exception(e, "Failed to save sellers to database");
+            }
+        }
     }
 
     @Override
     public void addSeller(PlayerIdentifier playerId, String sWorld, Block bSign, List<Block> containables, List<Block> activatables, ItemStack[] isItems, Map<String, String> misc, boolean save) {
         if (internalFunctionsOnly())
             throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
+
         Seller newSeller = new Seller(playerId, sWorld, containables, activatables, isItems, bSign.getLocation(), misc, save);
+
         sellers.put(bSign.getLocation(), newSeller);
 
         if (save) {
             try (Session session = sessionFactory.getCurrentSession()) {
                 session.beginTransaction();
+
                 session.persist(newSeller);
+
                 session.getTransaction().commit();
             } catch (HibernateException e) {
-                logger.exception(e, "Failed to save seller to database!");
+                logger.exception(e, String.format("Failed to save seller at %s!", signshopUtil.convertLocationToString(bSign.getLocation())));
             }
         }
     }
 
     @Override
-    public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables, ItemStack[] isItems) {
+    public void updateSeller(Block bSign, List<Block> containables, List<Block> activatables, @Nullable ItemStack[] isItems) {
         if (internalFunctionsOnly())
             throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        // TODO prepare query and queue it on the worker
-    }
 
-    @Override
-    public Seller getSeller(Location lKey) {
-        if (internalFunctionsOnly())
-            throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        return sellers.getOrDefault(lKey, null);
-    }
+        Location signLocation = bSign.getLocation();
 
-    @Override
-    public Collection<Seller> getSellers() {
-        if (internalFunctionsOnly())
-            throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        return sellers.values();
+        if (!sellers.containsKey(signLocation)) {
+            // If it isn't in the map try and retrieve it
+            try (Session session = sessionFactory.getCurrentSession()) {
+                session.getTransaction().begin();
+
+                CriteriaBuilder builder = session.getCriteriaBuilder();
+                SSQueryBuilder<Seller> query = new SSQueryBuilder<>(builder, Seller.class);
+                query.criteria.where(builder.equal(query.root.get("sign"), new LazyLocation(signLocation)));
+
+                Seller tempSeller = session.createQuery(query.criteria).uniqueResult();
+
+                if (tempSeller == null) {
+                    // Failed to retrieve from database
+                    session.getTransaction().rollback();
+                    throw new RuntimeException("Seller does not exist");
+                }
+
+                sellers.put(signLocation, tempSeller);
+
+                session.getTransaction().commit();
+            } catch (Exception e) {
+                logger.exception(e, String.format("Failed to update seller at %s!", signshopUtil.convertLocationToString(bSign.getLocation())));
+                return;
+            }
+        }
+
+        // Update
+
+        Seller toUpdate = sellers.get(signLocation);
+
+        toUpdate.setContainables(containables);
+        toUpdate.setActivatables(activatables);
+        if (isItems != null) toUpdate.setItems(isItems);
+
+        // Save to DB
+
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.getTransaction().begin();
+
+            if (!session.contains(toUpdate)) session.merge(toUpdate);
+
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            logger.exception(e, String.format("Failed to update seller at %s!", signshopUtil.convertLocationToString(bSign.getLocation())));
+        }
     }
 
     @Override
     public void removeSeller(Location lKey) {
         if (internalFunctionsOnly())
             throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        // Remove the seller from our local map
+
+        Seller toRemove = sellers.get(lKey);
+
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.getTransaction().begin();
+
+            if (!session.contains(toRemove)) session.merge(toRemove);
+
+            session.remove(toRemove);
+
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            logger.exception(e, String.format("Failed to remove seller at %s!", signshopUtil.convertLocationToString(toRemove.getSignLocation())));
+        }
+
         sellers.remove(lKey);
-
-        // TODO prepare query and queue it on the worker
-    }
-
-    @Override
-    public int countLocations(SignShopPlayer player) {
-        if (internalFunctionsOnly())
-            throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        return 0;
-    }
-
-    @Override
-    public List<Block> getSignsFromHolder(Block bHolder) {
-        if (internalFunctionsOnly())
-            throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        return null;
-    }
-
-    @Override
-    public List<Seller> getShopsByBlock(Block bBlock) {
-        if (internalFunctionsOnly())
-            throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        return null;
-    }
-
-    @Override
-    public List<Block> getShopsWithMiscSetting(String key, String value) {
-        if (internalFunctionsOnly())
-            throw logger.exception(null, "Seller data cannot be accessed in internal mode", true);
-        return null;
     }
 
     /*
@@ -277,6 +271,11 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
      */
 
     private final SignShopSchema schema;
+
+    @Override
+    public SignShopSchema getSchema() {
+        return schema == null ? readSchema() : schema;
+    }
 
     /**
      * Get the schema for this server. If one does not exist in the database create one
@@ -338,7 +337,7 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
                         tempSchema = new SignShopSchema(
                                 server,
                                 DATABASE_VERSION,
-                                SignShopConfig.DataSourceType.YML,
+                                DataSourceType.YML,
                                 null);
                         session.persist(tempSchema);
                     }
@@ -370,22 +369,6 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
         }
     }
 
-    /**
-     * Get the external database (if present) or fallback to a guaranteed SQLite connection
-     * Internal functions other than the schema will use this connection
-     *
-     * @return A valid SessionFactory
-     */
-    private SessionFactory databaseOrSqlite() {
-        if (sessionFactory != null) return sessionFactory;
-        return sqliteFactory;
-    }
-
-    @Override
-    public SignShopSchema getSchema() {
-        return schema;
-    }
-
     @Override
     public void saveSchema() {
         try (Session session = sqliteFactory.getCurrentSession()) {
@@ -400,5 +383,16 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
         } catch (Exception e) {
             logger.exception(e, "Failed to connect to schema database!");
         }
+    }
+
+    /**
+     * Get the external database (if present) or fallback to a guaranteed SQLite connection
+     * Internal functions other than the schema will use this connection
+     *
+     * @return A valid SessionFactory
+     */
+    private SessionFactory databaseOrSqlite() {
+        if (sessionFactory != null) return sessionFactory;
+        return sqliteFactory;
     }
 }
