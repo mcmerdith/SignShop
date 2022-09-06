@@ -1,5 +1,7 @@
 package org.wargamer2010.signshop.configuration;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -8,10 +10,11 @@ import org.bukkit.block.Sign;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
-import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
-import org.wargamer2010.signshop.configuration.storage.database.InternalDatabase;
 import org.wargamer2010.signshop.configuration.storage.YMLDataSource;
+import org.wargamer2010.signshop.configuration.storage.database.InternalDatabase;
+import org.wargamer2010.signshop.configuration.storage.database.models.SignShopSchema;
+import org.wargamer2010.signshop.configuration.storage.database.util.DatabaseUtil;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 import org.wargamer2010.signshop.util.SignShopLogger;
@@ -20,18 +23,19 @@ import org.wargamer2010.signshop.util.signshopUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.File;
 import java.util.*;
 
 public abstract class Storage {
     /**
      * Get the Storage implementation this DataSource represents
+     *
      * @return The implemented datasource
      */
     abstract public DataSourceType getType();
 
     /**
      * The Seller map this storage implementation is using
+     *
      * @return The Location -> Seller map for this instance
      */
     abstract protected Map<Location, Seller> getSellerMap();
@@ -251,6 +255,7 @@ public abstract class Storage {
      */
 
     private static final SignShopLogger logger = SignShopLogger.getStorageLogger();
+    private static final SignShopLogger migrationLogger = SignShopLogger.getLogger("Storage Migrator");
 
     /**
      * The active storage implementation
@@ -261,8 +266,6 @@ public abstract class Storage {
      * The internal database
      */
     private static DatabaseDataSource database;
-
-    private static boolean init = false;
 
     /**
      * Initialize data storage using the implementation defined by {@link SignShopConfig#getDataSource()}
@@ -280,7 +283,17 @@ public abstract class Storage {
             source.dispose();
         }
 
+        try {
+            // Attempt to disabled logging by Hibernate/Hikari/MariaDB
+            Configurator.setLevel("org.hibernate", Level.OFF);
+            Configurator.setLevel("org.mariadb", Level.OFF);
+            Configurator.setLevel("com.zaxxer.hikari", Level.OFF);
+            if (SignShopConfig.debugging()) Configurator.setLevel("org.hibernate.SQL", Level.INFO);
+        } catch (Exception ignored) {
+        }
+
         // Initialize the internal database
+
         database = new DatabaseDataSource(type);
 
         if (type == DataSourceType.YML) {
@@ -289,19 +302,23 @@ public abstract class Storage {
             source = database;
         }
 
-        if (database.getSchema().needsStorageMigration()) {
-            DataSourceType from = database.getSchema().getDataSource();
+        source.loadSellers();
 
-            if (type == DataSourceType.YML) {
-                migrate(new YMLDataSource());
-            } else {
-
-            }
+        if (!instanceValid(database)) {
+            logger.error("Loading succeeded with errors...");
         }
 
-        init = true;
+        logger.info("Success! Set Storage implementation to " + type.name());
+    }
 
-        logger.info("Success!");
+    public static void onDisable() {
+        logger.info("Saving session information and seller data");
+
+        database.saveSchema();
+        source.saveSellers();
+
+        database.dispose();
+        if (source != database) source.dispose();
     }
 
     /**
@@ -318,37 +335,54 @@ public abstract class Storage {
     }
 
     /**
-     * Migrate data from another storage implementation to the current on
+     * Check that this instance of valid according to a {@link SignShopSchema}
+     *
+     * @param database The Database holding the Schema to validate against
+     */
+    public static boolean instanceValid(InternalDatabase database) {
+        SignShopSchema schema = database.getSchema();
+
+        if (!schema.needsStorageMigration() && !schema.needsDatabaseMigration()) return true;
+
+        DataSourceType from = schema.getDataSource();
+        DataSourceType to = source.getType();
+
+        if (schema.needsDatabaseMigration()) {
+            String fromUrl = schema.getConnectionProperties().getProperty(DatabaseUtil.HIBERNATE_URL_KEY);
+            String toUrl = DatabaseUtil.getDatabaseProperties(true).getProperty(DatabaseUtil.HIBERNATE_URL_KEY);
+            migrationLogger.info(String.format("Migrating data from %s (%s) to %s (%s)", from.name(), fromUrl, to.name(), toUrl));
+        } else if (schema.needsStorageMigration()) {
+            migrationLogger.info(String.format("Migrating data from %s to %s", from.name(), to.name()));
+        }
+
+        Storage previousInstance;
+
+        if (from == DataSourceType.YML) {
+            previousInstance = new YMLDataSource();
+        } else {
+            // Migrating from one of SQLITE, MYSQL, MARIADB
+            previousInstance = new DatabaseDataSource(from, schema.getConnectionProperties());
+        }
+
+        if (migrate(previousInstance)) {
+            migrationLogger.info("Success!");
+            schema.setDataSource(source.getType());
+            if (to.isExternal()) schema.setConnectionProperties(DatabaseUtil.getDatabaseProperties(true));
+            database.saveSchema();
+            return true;
+        } else {
+            migrationLogger.error("Failed to migrate data!");
+            return false;
+        }
+    }
+
+    /**
+     * Migrate data from another storage implementation to the current one
      *
      * @param oldStorage The old Storage
      * @return If the migration was successful
      */
     public static boolean migrate(Storage oldStorage) {
-        SignShopLogger migrationLogger = new SignShopLogger("Storage Migrator");
-
-        DataSourceType oldType = oldStorage.getType();
-        DataSourceType currentType = source.getType();
-
-        migrationLogger.info("Migrating data from " + oldType.name() + " to " + currentType.name());
-
-        if (oldType == currentType) {
-            migrationLogger.info("Storage implementation has not changed! No need to migrate");
-            oldStorage.dispose();
-            return true;
-        }
-
-//        if (database.getSchema().needsVersionConversion()) {
-//            migrationLogger.error("Cannot perform Storage migration when the database is out of data! Please revert your configuration and restart the server!");
-//            return false;
-//        }
-
-        if (oldType != DataSourceType.YML && currentType != DataSourceType.YML
-                && oldType != DataSourceType.SQLITE && currentType != DataSourceType.SQLITE) {
-            migrationLogger.error("Unable to automatically migrate data between two external databases! Please use the `/signshop MigrateDatabase` command or migrate the database yourself.");
-
-            return false;
-        }
-
         oldStorage.loadSellers();
 
         // YML doesn't correct the data until the world is loaded, so make sure everything there
@@ -359,13 +393,31 @@ public abstract class Storage {
                     Bukkit.getPluginManager().callEvent(event);
                 }
             } catch (Exception ignored) {
-                migrationLogger.debug("Could not load worlds for YMLDataSource. Some shops may not have been loaded");
+                migrationLogger.debug("Could not load worlds. Some shops may not have been migrated...");
             }
         }
 
-        migrationLogger.info("Complete!");
+        migrationLogger.info(String.format("Loaded %d shops from %s", oldStorage.shopCount(), oldStorage.getType().name()));
 
-        return false;
+        int before = source.shopCount();
+
+        // Move everything over
+        source.getSellerMap().putAll(oldStorage.getSellerMap());
+
+        int after = source.shopCount() - before;
+
+        // Make sure it worked
+        if (after != oldStorage.shopCount()) {
+            migrationLogger.error(String.format("%d shops failed to migrate from %s!", oldStorage.shopCount() - after, source.getType().name()));
+            return false;
+        }
+
+        migrationLogger.info(String.format("Saving %d shops from previous Storage", oldStorage.shopCount()));
+
+        // Save
+        source.saveSellers();
+
+        return true;
     }
 
     /**
