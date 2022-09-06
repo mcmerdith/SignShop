@@ -3,11 +3,16 @@ package org.wargamer2010.signshop.util;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class SignShopLogger {
-    public static SignShopLogger STORAGE;
-    public static SignShopLogger DATABASE;
+    private static Map<String, SignShopLogger> loggers = new HashMap<>();
+    private static SignShopLogger STORAGE;
+    private static SignShopLogger DATABASE;
+    private static SignShopLogger MAIN;
+    private static SignShopLogger CONFIG;
 
     public static SignShopLogger getStorageLogger() {
         if (STORAGE == null) STORAGE = new SignShopLogger("Storage");
@@ -17,6 +22,21 @@ public class SignShopLogger {
     public static SignShopLogger getDatabaseLogger() {
         if (DATABASE == null) DATABASE = new SignShopLogger("Database");
         return DATABASE;
+    }
+
+    public static SignShopLogger getMainLogger() {
+        if (MAIN == null) MAIN = new SignShopLogger();
+        return MAIN;
+    }
+
+    public static SignShopLogger getConfigLogger() {
+        if (CONFIG == null) CONFIG = new SignShopLogger("Configuration");
+        return CONFIG;
+    }
+
+    public static SignShopLogger getLogger(String name) {
+        if (!loggers.containsKey(name)) loggers.put(name, new SignShopLogger(name));
+        return loggers.get(name);
     }
 
     private String name;
@@ -29,7 +49,7 @@ public class SignShopLogger {
      *
      * @param name The name of the logger
      */
-    public SignShopLogger(String name) {
+    private SignShopLogger(String name) {
         this.name = name;
     }
 
