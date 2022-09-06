@@ -135,3 +135,5 @@ $RECYCLE.BIN/
 /target/
 *.db
 *.iml
+/SignShopTestServer/
+/storage_test_data/
