@@ -1,4 +1,4 @@
-package org.wargamer2010.signshop.configuration.annotations;
+package org.wargamer2010.signshop.configuration.orm.annotations;
 
 import java.lang.annotation.*;
 

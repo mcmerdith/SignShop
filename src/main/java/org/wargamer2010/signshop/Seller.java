@@ -6,8 +6,8 @@ import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
-import org.wargamer2010.signshop.configuration.annotations.Column;
-import org.wargamer2010.signshop.configuration.annotations.Table;
+import org.wargamer2010.signshop.configuration.orm.annotations.Column;
+import org.wargamer2010.signshop.configuration.orm.annotations.Model;
 import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.player.PlayerCache;
@@ -20,7 +20,7 @@ import org.wargamer2010.signshop.util.signshopUtil;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Table(name = "sellers")
+@Model(tableName = "sellers")
 public class Seller {
 
     /*

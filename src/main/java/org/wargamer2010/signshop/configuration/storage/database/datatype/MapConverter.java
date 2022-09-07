@@ -1,6 +1,6 @@
 package org.wargamer2010.signshop.configuration.storage.database.datatype;
 
-import org.wargamer2010.signshop.configuration.annotations.Converter;
+import org.wargamer2010.signshop.configuration.orm.annotations.Converter;
 
 import java.util.ArrayList;
 import java.util.HashMap;

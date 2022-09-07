@@ -3,7 +3,7 @@ package org.wargamer2010.signshop.configuration.storage.database.datatype;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
-import org.wargamer2010.signshop.configuration.annotations.Converter;
+import org.wargamer2010.signshop.configuration.orm.annotations.Converter;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
 import java.io.ByteArrayInputStream;
