@@ -1,19 +1,13 @@
 package org.wargamer2010.signshop;
 
-import jakarta.persistence.*;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.GenericGenerator;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
-import org.wargamer2010.signshop.configuration.storage.database.datatype.ItemStackConverter;
-import org.wargamer2010.signshop.configuration.storage.database.datatype.LazyLocationConverter;
-import org.wargamer2010.signshop.configuration.storage.database.datatype.MapConverter;
-import org.wargamer2010.signshop.configuration.storage.database.datatype.SignShopPlayerConverter;
+import org.wargamer2010.signshop.configuration.annotations.Column;
+import org.wargamer2010.signshop.configuration.annotations.Table;
 import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.player.PlayerCache;
@@ -26,7 +20,6 @@ import org.wargamer2010.signshop.util.signshopUtil;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Entity
 @Table(name = "sellers")
 public class Seller {
 
@@ -34,54 +27,60 @@ public class Seller {
     Database specific stuff
      */
 
-    @Id
-    @GeneratedValue(generator = "increment")
-    @GenericGenerator(name = "increment", strategy = "increment")
+//    @Id
+//    @GeneratedValue(generator = "increment")
+//    @GenericGenerator(name = "increment", strategy = "increment")
+    @Column(name = "id", definition = "bigint")
     private Long id;
 
-    @OneToOne(mappedBy = "seller")
+//    @OneToOne(mappedBy = "seller")
     private SellerExport export;
 
     /*
     Seller class
      */
 
-    @ElementCollection
-    @Fetch(FetchMode.JOIN)
-    @Convert(converter = LazyLocationConverter.class)
+//    @ElementCollection
+//    @Fetch(FetchMode.JOIN)
+//    @Convert(converter = LazyLocationConverter.class)
     private List<LazyLocation> containables;
 
-    @ElementCollection
-    @Fetch(FetchMode.JOIN)
-    @Convert(converter = LazyLocationConverter.class)
+//    @ElementCollection
+//    @Fetch(FetchMode.JOIN)
+//    @Convert(converter = LazyLocationConverter.class)
     private List<LazyLocation> activatables;
 
-    @Lob
-    @Convert(converter = ItemStackConverter.class)
-    @Column(name = "items", columnDefinition = "BLOB")
+//    @Lob
+//    @Convert(converter = ItemStackConverter.class)
+//    @Column(name = "items", columnDefinition = "BLOB")
+    @Column(name = "items", definition = "blob")
     private ItemStack[] isItems;
 
-    @Column(name = "sign", unique = true)
-    @Basic(optional = false)
-    @Convert(converter = LazyLocationConverter.class)
+//    @Column(name = "sign", unique = true)
+//    @Basic(optional = false)
+//    @Convert(converter = LazyLocationConverter.class)
+    @Column(name = "sign", definition = "varchar(255)")
     private LazyLocation signLocation;
 
-    @Lob
-    @Convert(converter = MapConverter.class)
-    @Column(columnDefinition = "VARCHAR(10000)")
+//    @Lob
+//    @Convert(converter = MapConverter.class)
+//    @Column(columnDefinition = "VARCHAR(10000)")
+    @Column(name = "miscProps", definition = "varchar(10000)")
     private Map<String, String> miscProps = new HashMap<>();
 
-    @Transient
+//    @Transient
     private Map<String, String> volatileProperties = new LinkedHashMap<>();
 
-    @Transient
+//    @Transient
     private Map<String, Object> serializedData = new HashMap<>();
 
-    @Convert(converter = SignShopPlayerConverter.class)
-    @Basic(optional = false)
+//    @Convert(converter = SignShopPlayerConverter.class)
+//    @Basic(optional = false)
+    @Column(name = "sign", definition = "varchar(255)")
     private SignShopPlayer owner;
 
-    @Basic(optional = false)
+//    @Basic(optional = false)
+    @Column(name = "sign", definition = "varchar(255)")
     private String world;
 
     protected Seller() {

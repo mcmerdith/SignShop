@@ -1,12 +1,11 @@
 package org.wargamer2010.signshop.configuration.storage.database.datatype;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
+import org.wargamer2010.signshop.configuration.annotations.Converter;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 
 @Converter
-public class SignShopPlayerConverter implements AttributeConverter<SignShopPlayer, String> {
+public class SignShopPlayerConverter implements SSAttributeConverter<SignShopPlayer, String> {
     @Override
     public String convertToDatabaseColumn(SignShopPlayer signShopPlayer) {
         if (signShopPlayer == null) return null;

@@ -1,15 +1,14 @@
 package org.wargamer2010.signshop.configuration.storage.database.datatype;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
+import org.wargamer2010.signshop.configuration.annotations.Converter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Converter(autoApply = true)
-public class MapConverter implements AttributeConverter<Map<String, String>, String> {
+@Converter
+public class MapConverter implements SSAttributeConverter<Map<String, String>, String> {
     private static final String keyValueDelimeter = ":";
     private static final String entryDelimeter = ";";
 
@@ -19,7 +18,7 @@ public class MapConverter implements AttributeConverter<Map<String, String>, Str
 
         List<String> entries = new ArrayList<>();
 
-        stringStringMap.forEach((k,v) -> entries.add(k + keyValueDelimeter + v));
+        stringStringMap.forEach((k, v) -> entries.add(k + keyValueDelimeter + v));
 
         return String.join(entryDelimeter, entries);
     }

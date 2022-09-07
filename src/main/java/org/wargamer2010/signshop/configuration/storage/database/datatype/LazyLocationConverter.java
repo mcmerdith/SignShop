@@ -1,13 +1,10 @@
 package org.wargamer2010.signshop.configuration.storage.database.datatype;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
+import org.wargamer2010.signshop.configuration.annotations.Converter;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 
 @Converter
-public class LazyLocationConverter implements AttributeConverter<LazyLocation, String> {
+public class LazyLocationConverter implements SSAttributeConverter<LazyLocation, String> {
     @Override
     public String convertToDatabaseColumn(LazyLocation lazy) {
         if (lazy == null) return null;
