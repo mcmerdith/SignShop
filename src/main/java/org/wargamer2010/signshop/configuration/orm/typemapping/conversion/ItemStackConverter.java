@@ -1,15 +1,13 @@
-package org.wargamer2010.signshop.configuration.storage.database.datatype;
+package org.wargamer2010.signshop.configuration.orm.typemapping.conversion;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
-import org.wargamer2010.signshop.configuration.orm.annotations.Converter;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-@Converter
 public class ItemStackConverter implements SSAttributeConverter<ItemStack, byte[]> {
     @Override
     public byte[] convertToDatabaseColumn(ItemStack itemStack) {
@@ -25,7 +23,7 @@ public class ItemStackConverter implements SSAttributeConverter<ItemStack, byte[
     }
 
     @Override
-    public ItemStack convertToEntityAttribute(byte[] serializable) {
+    public ItemStack convertToModelAttribute(byte[] serializable) {
         if (serializable == null)
             return null;
 

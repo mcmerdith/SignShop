@@ -1,13 +1,10 @@
-package org.wargamer2010.signshop.configuration.storage.database.datatype;
-
-import org.wargamer2010.signshop.configuration.orm.annotations.Converter;
+package org.wargamer2010.signshop.configuration.orm.typemapping.conversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Converter
 public class MapConverter implements SSAttributeConverter<Map<String, String>, String> {
     private static final String keyValueDelimeter = ":";
     private static final String entryDelimeter = ";";
@@ -24,7 +21,7 @@ public class MapConverter implements SSAttributeConverter<Map<String, String>, S
     }
 
     @Override
-    public Map<String, String> convertToEntityAttribute(String s) {
+    public Map<String, String> convertToModelAttribute(String s) {
         Map<String, String> output = new HashMap<>();
 
         if (s == null) return output;

@@ -1,5 +1,6 @@
 package org.wargamer2010.signshop.configuration.storage;
 
+import com.zaxxer.hikari.HikariConfig;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -37,7 +38,7 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
     public final SessionFactory sqliteFactory;
 
     private final DataSourceType type;
-    private final Properties customProperties;
+    private final HikariConfig customConfig;
 
     /**
      * If the database can only perform built-in storage
@@ -55,14 +56,14 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
      *
      * @throws IllegalStateException If the database is unavailable
      */
-    public DatabaseDataSource(DataSourceType dataSource, Properties properties) throws IllegalStateException {
+    public DatabaseDataSource(DataSourceType dataSource, HikariConfig config) throws IllegalStateException {
         this.type = dataSource;
-        this.customProperties = properties;
+        this.customConfig = config;
 
         logger.info("Initializing new Transfer DatabaseDataSource for " + type.name());
 
         sqliteFactory = null;
-        sessionFactory = SSSessionFactory.getDatabaseFactory(type, customProperties);
+        sessionFactory = SSSessionFactory.getDatabaseFactory(type, customConfig);
         schema = null;
     }
 
@@ -73,7 +74,7 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
      */
     public DatabaseDataSource(DataSourceType pluginDataSource) throws IllegalStateException {
         this.type = pluginDataSource;
-        this.customProperties = null;
+        this.customConfig = null;
 
         // Build our sqLite database. Default SQLite config is available on the classpath as "hibernate.cfg.xml"
         // This will become the final database if using SQLite, otherwise it will be disposed of after reading the schema
@@ -101,8 +102,8 @@ public class DatabaseDataSource extends Storage implements InternalDatabase {
      *
      * @return The database custom properties, or null if they are not configured
      */
-    public Properties getCustomProperties() {
-        return customProperties;
+    public Properties getCustomConfig() {
+        return customConfig;
     }
 
     /*

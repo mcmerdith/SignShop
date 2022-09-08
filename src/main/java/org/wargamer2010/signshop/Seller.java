@@ -6,8 +6,9 @@ import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
-import org.wargamer2010.signshop.configuration.orm.annotations.Column;
-import org.wargamer2010.signshop.configuration.orm.annotations.Model;
+import org.wargamer2010.signshop.configuration.orm.annotations.*;
+import org.wargamer2010.signshop.configuration.orm.typemapping.SqlType;
+import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.SignShopPlayerConverter;
 import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.player.PlayerCache;
@@ -30,10 +31,11 @@ public class Seller {
 //    @Id
 //    @GeneratedValue(generator = "increment")
 //    @GenericGenerator(name = "increment", strategy = "increment")
-    @Column(name = "id", definition = "bigint")
+    @Id(autoIncrement = true)
+    @Column
     private Long id;
 
-//    @OneToOne(mappedBy = "seller")
+    @OneToOne(otherColumnName = "seller")
     private SellerExport export;
 
     /*
@@ -53,7 +55,7 @@ public class Seller {
 //    @Lob
 //    @Convert(converter = ItemStackConverter.class)
 //    @Column(name = "items", columnDefinition = "BLOB")
-    @Column(name = "items", definition = "blob")
+    @Column(name = "items", definition = SqlType.BLOB)
     private ItemStack[] isItems;
 
 //    @Column(name = "sign", unique = true)
@@ -68,19 +70,17 @@ public class Seller {
     @Column(name = "miscProps", definition = "varchar(10000)")
     private Map<String, String> miscProps = new HashMap<>();
 
-//    @Transient
+    @Transient
     private Map<String, String> volatileProperties = new LinkedHashMap<>();
 
-//    @Transient
+    @Transient
     private Map<String, Object> serializedData = new HashMap<>();
 
-//    @Convert(converter = SignShopPlayerConverter.class)
-//    @Basic(optional = false)
-    @Column(name = "sign", definition = "varchar(255)")
+    @Convert(converter = SignShopPlayerConverter.class)
+    @Column(name = "sign", definition = SqlType.STRING, optional = false)
     private SignShopPlayer owner;
 
-//    @Basic(optional = false)
-    @Column(name = "sign", definition = "varchar(255)")
+    @Column(name = "sign", definition = SqlType.STRING, optional = false)
     private String world;
 
     protected Seller() {

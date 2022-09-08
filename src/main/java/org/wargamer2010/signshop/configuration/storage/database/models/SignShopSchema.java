@@ -1,21 +1,23 @@
 package org.wargamer2010.signshop.configuration.storage.database.models;
 
+import com.zaxxer.hikari.HikariConfig;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.DataSourceType;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
+import org.wargamer2010.signshop.configuration.orm.annotations.Model;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
-import org.wargamer2010.signshop.configuration.storage.database.datatype.PropertiesConverter;
+import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.HikariConfigConverter;
 import org.wargamer2010.signshop.configuration.storage.database.util.DatabaseUtil;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.Properties;
 
-@Entity
-@Table(name = "signshop_master")
+@Model(tableName = "signshop_master")
 public class SignShopSchema {
     /*
     Fields
@@ -51,8 +53,8 @@ public class SignShopSchema {
     private DataSourceType dataSource;
 
     @SuppressWarnings("JpaAttributeTypeInspection")
-    @Convert(converter = PropertiesConverter.class)
-    private Properties connectionProperties;
+    @Convert(converter = HikariConfigConverter.class)
+    private HikariConfig config;
 
     /*
     Setters
@@ -70,8 +72,8 @@ public class SignShopSchema {
         this.dataSource = dataSource;
     }
 
-    public void setConnectionProperties(Properties connectionProperties) {
-        this.connectionProperties = connectionProperties;
+    public void setConfig(HikariConfig config) {
+        this.config = config;
     }
 
     /*
@@ -102,8 +104,8 @@ public class SignShopSchema {
     /**
      * @return The last url that was used to connect to the database
      */
-    public Properties getConnectionProperties() {
-        return connectionProperties;
+    public HikariConfig getConfig() {
+        return config;
     }
 
     /*
@@ -142,7 +144,7 @@ public class SignShopSchema {
         // Current session info
         int CURRENT_VERSION = DatabaseDataSource.DATABASE_VERSION;
         DataSourceType CURRENT_SOURCE = SignShopConfig.getDataSource();
-        Properties CURRENT_CONNECTION = DatabaseUtil.getDatabaseProperties(true);
+        HikariConfig CURRENT_CONNECTION = DatabaseUtil.getConfig();
 
 
         // Check if the database revision is different
@@ -160,19 +162,9 @@ public class SignShopSchema {
 
 
         // Validate that we are connected to the same database
-        if (!DatabaseUtil.isConnectionChangeOkay(connectionProperties, CURRENT_CONNECTION)) {
+        if (!DatabaseUtil.isConnectionChangeOkay(config, CURRENT_CONNECTION)) {
             connectionOK = false;
             logger.error("Database connection information does not match last session! The database likely needs a migration!");
-            logger.info("   Saving migration data to database_migration.properties... Please migrate the database yourself, or try the '/signshop MigrateDatabase' command");
-
-            try {
-                File migrationData = new File(SignShop.getInstance().getDataFolder(), String.format("database_migration%d.properties", System.currentTimeMillis()));
-                FileOutputStream fs = new FileOutputStream(migrationData);
-                connectionProperties.store(fs, "Migration Data");
-                fs.close();
-            } catch (Exception e) {
-                logger.exception(e, "Failed to write migration file!");
-            }
         }
 
 
@@ -207,12 +199,12 @@ public class SignShopSchema {
      * @param server               The identifier for this server
      * @param databaseVersion      The version of the database being used
      * @param dataSource           The Storage implementation used last time SignShop was running
-     * @param connectionProperties The last url that was used to connect to the database
+     * @param config The last url that was used to connect to the database
      */
-    public SignShopSchema(String server, int databaseVersion, DataSourceType dataSource, Properties connectionProperties) {
+    public SignShopSchema(String server, int databaseVersion, DataSourceType dataSource, Properties config) {
         this.server = server;
         this.databaseVersion = databaseVersion;
         this.dataSource = dataSource;
-        this.connectionProperties = connectionProperties;
+        this.config = config;
     }
 }

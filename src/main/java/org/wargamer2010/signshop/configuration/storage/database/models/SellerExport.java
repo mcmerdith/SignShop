@@ -1,41 +1,40 @@
 package org.wargamer2010.signshop.configuration.storage.database.models;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.wargamer2010.signshop.Seller;
+import org.wargamer2010.signshop.configuration.orm.annotations.*;
 import org.wargamer2010.signshop.util.signshopUtil;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Entity
+@Model
 public class SellerExport {
-    @Id
-    @GeneratedValue(generator = "increment")
-    @GenericGenerator(name = "increment", strategy = "increment")
+    @Id(autoIncrement = true)
     private Long id;
 
-    @OneToOne(optional = false)
-    @JoinColumn(name = "seller_id", referencedColumnName = "id")
+    @OneToOne(otherColumnName = "id")
+    @Column(name = "seller_id")
     private Seller seller;
 
-    @ElementCollection
+    @ManyToOne
     @Column(name = "export_containables")
     private List<String> containables;
 
-    @ElementCollection
+    @ManyToOne
     @Column(name = "export_activatables")
     private List<String> activatables;
 
-    @ElementCollection
+    @ManyToOne()
     @Column(name = "export_items")
     private List<String> items;
 
     @Column(name = "export_state")
     private String state;
 
-    protected SellerExport() {}
+    protected SellerExport() {
+    }
+
     protected SellerExport(Seller seller, List<String> containables, List<String> activatables, List<String> items, String state) {
         this.seller = seller;
         this.containables = containables;

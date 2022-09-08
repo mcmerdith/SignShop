@@ -1,10 +1,8 @@
-package org.wargamer2010.signshop.configuration.storage.database.datatype;
+package org.wargamer2010.signshop.configuration.orm.typemapping.conversion;
 
-import org.wargamer2010.signshop.configuration.orm.annotations.Converter;
 import org.wargamer2010.signshop.player.PlayerIdentifier;
 import org.wargamer2010.signshop.player.SignShopPlayer;
 
-@Converter
 public class SignShopPlayerConverter implements SSAttributeConverter<SignShopPlayer, String> {
     @Override
     public String convertToDatabaseColumn(SignShopPlayer signShopPlayer) {
@@ -13,7 +11,7 @@ public class SignShopPlayerConverter implements SSAttributeConverter<SignShopPla
     }
 
     @Override
-    public SignShopPlayer convertToEntityAttribute(String s) {
+    public SignShopPlayer convertToModelAttribute(String s) {
         return PlayerIdentifier.getPlayerFromString(s);
     }
 }

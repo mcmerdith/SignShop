@@ -10,6 +10,8 @@ import org.bukkit.block.Sign;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
+import org.wargamer2010.signshop.SignShop;
+import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.HikariConfigConverter;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
 import org.wargamer2010.signshop.configuration.storage.YMLDataSource;
 import org.wargamer2010.signshop.configuration.storage.database.InternalDatabase;
@@ -23,6 +25,10 @@ import org.wargamer2010.signshop.util.signshopUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.*;
 
 public abstract class Storage {
@@ -348,8 +354,8 @@ public abstract class Storage {
         DataSourceType to = source.getType();
 
         if (schema.needsDatabaseMigration()) {
-            String fromUrl = schema.getConnectionProperties().getProperty(DatabaseUtil.HIBERNATE_URL_KEY);
-            String toUrl = DatabaseUtil.getDatabaseProperties(true).getProperty(DatabaseUtil.HIBERNATE_URL_KEY);
+            String fromUrl = schema.getConfig().getJdbcUrl();
+            String toUrl = DatabaseUtil.getConfig().getJdbcUrl();
             migrationLogger.info(String.format("Migrating data from %s (%s) to %s (%s)", from.name(), fromUrl, to.name(), toUrl));
         } else if (schema.needsStorageMigration()) {
             migrationLogger.info(String.format("Migrating data from %s to %s", from.name(), to.name()));
@@ -361,17 +367,32 @@ public abstract class Storage {
             previousInstance = new YMLDataSource();
         } else {
             // Migrating from one of SQLITE, MYSQL, MARIADB
-            previousInstance = new DatabaseDataSource(from, schema.getConnectionProperties());
+            previousInstance = new DatabaseDataSource(from, schema.getConfig());
         }
 
         if (migrate(previousInstance)) {
             migrationLogger.info("Success!");
             schema.setDataSource(source.getType());
-            if (to.isExternal()) schema.setConnectionProperties(DatabaseUtil.getDatabaseProperties(true));
+            if (to.isExternal()) schema.setConfig(DatabaseUtil.getConfig(true));
             database.saveSchema();
             return true;
         } else {
             migrationLogger.error("Failed to migrate data!");
+            migrationLogger.info("   Saving migration data to database.migration... Please migrate the database yourself, or try the '/signshop MigrateDatabase' command");
+
+            try {
+                File migrationData = new File(SignShop.getInstance().getDataFolder(), String.format("database_%d.migration", System.currentTimeMillis()));
+
+                // Write the current database configuration to file
+                BufferedWriter fs = new BufferedWriter(new FileWriter(migrationData));
+                fs.write("##########################################");
+                fs.write("#             Migration Data             #");
+                fs.write("##########################################");
+                fs.write(HikariConfigConverter.configToString(schema.getConfig()).replace(";", "\n"));
+                fs.close();
+            } catch (Exception e) {
+                migrationLogger.exception(e, "Failed to write migration file!");
+            }
             return false;
         }
     }

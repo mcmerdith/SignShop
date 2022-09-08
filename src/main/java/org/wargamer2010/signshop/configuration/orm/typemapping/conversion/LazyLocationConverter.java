@@ -1,9 +1,7 @@
-package org.wargamer2010.signshop.configuration.storage.database.datatype;
+package org.wargamer2010.signshop.configuration.orm.typemapping.conversion;
 
-import org.wargamer2010.signshop.configuration.orm.annotations.Converter;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 
-@Converter
 public class LazyLocationConverter implements SSAttributeConverter<LazyLocation, String> {
     @Override
     public String convertToDatabaseColumn(LazyLocation lazy) {
@@ -12,7 +10,7 @@ public class LazyLocationConverter implements SSAttributeConverter<LazyLocation,
     }
 
     @Override
-    public LazyLocation convertToEntityAttribute(String stringRepresentation) {
+    public LazyLocation convertToModelAttribute(String stringRepresentation) {
         if (stringRepresentation == null) return null;
         return new LazyLocation(stringRepresentation);
     }

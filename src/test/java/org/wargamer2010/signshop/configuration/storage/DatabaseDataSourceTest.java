@@ -28,7 +28,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 public class DatabaseDataSourceTest {
@@ -160,7 +159,7 @@ public class DatabaseDataSourceTest {
     public void setUp() throws Exception {
         if (wipeForTest && SignShopConfig.getDataSource() != DataSourceType.YML) {
             // Wipe the database clean
-            Properties props = DatabaseUtil.getDatabaseProperties(false);
+            Properties props = DatabaseUtil.getConfig(false);
             props.put("hibernate.hbm2ddl.auto", Action.CREATE.getExternalHbm2ddlName());
             new DatabaseDataSource(SignShopConfig.getDataSource(), props).dispose();
         }

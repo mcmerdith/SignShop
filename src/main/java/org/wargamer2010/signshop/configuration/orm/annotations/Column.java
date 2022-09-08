@@ -1,12 +1,33 @@
 package org.wargamer2010.signshop.configuration.orm.annotations;
 
-import java.lang.annotation.*;
+import org.wargamer2010.signshop.configuration.orm.typemapping.SqlType;
 
-@Retention(RetentionPolicy.RUNTIME)
+import java.lang.annotation.*;
 
 @Documented
 @Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Column {
-    String name();
-    String definition();
+    /**
+     * @return
+     */
+    String name() default "";
+
+    SqlType definition() default SqlType.AUTO;
+
+    SqlType.Size size() default SqlType.Size.NONE;
+
+    boolean nullable() default true;
+
+    boolean unique() default false;
+
+    String customDefinition() default "";
+
+    int length() default 255;
+
+    int precision() default 0;
+
+    int scale() default 5;
 }
+
+

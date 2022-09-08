@@ -7,5 +7,9 @@ import java.lang.annotation.*;
 @Documented
 @Target({ElementType.TYPE})
 public @interface Model {
-    String tableName();
+    /**
+     * The name of the table
+     * Default: The name of the class, lowercase
+     */
+    String tableName() default "";
 }
