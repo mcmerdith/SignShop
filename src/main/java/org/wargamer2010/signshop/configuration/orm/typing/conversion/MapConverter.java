@@ -1,4 +1,4 @@
-package org.wargamer2010.signshop.configuration.orm.typemapping.conversion;
+package org.wargamer2010.signshop.configuration.orm.typing.conversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;

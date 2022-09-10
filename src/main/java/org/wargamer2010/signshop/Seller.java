@@ -7,8 +7,8 @@ import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
 import org.wargamer2010.signshop.configuration.orm.annotations.*;
-import org.wargamer2010.signshop.configuration.orm.typemapping.SqlType;
-import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.SignShopPlayerConverter;
+import org.wargamer2010.signshop.configuration.orm.typing.SqlType;
+import org.wargamer2010.signshop.configuration.orm.typing.conversion.SignShopPlayerConverter;
 import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.player.PlayerCache;
@@ -35,7 +35,6 @@ public class Seller {
     @Column
     private Long id;
 
-    @OneToOne(otherColumnName = "seller")
     private SellerExport export;
 
     /*

@@ -1,6 +1,4 @@
-package org.wargamer2010.signshop.configuration.orm.typemapping;
-
-import org.wargamer2010.signshop.configuration.orm.annotations.Column;
+package org.wargamer2010.signshop.configuration.orm.typing;
 
 public class ColumnType {
     public static final SqlType.Size DEFAULT_SIZE = SqlType.Size.NONE;

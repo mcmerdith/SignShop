@@ -1,6 +1,6 @@
 package org.wargamer2010.signshop.configuration.orm.annotations;
 
-import org.wargamer2010.signshop.configuration.orm.typemapping.SqlType;
+import org.wargamer2010.signshop.configuration.orm.typing.SqlType;
 
 import java.lang.annotation.*;
 
@@ -28,6 +28,8 @@ public @interface Column {
     int precision() default 0;
 
     int scale() default 5;
+
+    String check() default "";
 }
 
 

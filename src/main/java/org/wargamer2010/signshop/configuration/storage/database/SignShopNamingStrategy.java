@@ -1,14 +1,12 @@
 package org.wargamer2010.signshop.configuration.storage.database;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
+import org.wargamer2010.signshop.configuration.orm.NameManager;
 
 /**
  * Instruct Hibernate to prefix all tables (except `signshop_master`) with signshop_[server_name]
  */
-public class SignShopNamingStrategy extends PhysicalNamingStrategyStandardImpl {
+public class SignShopNamingStrategy implements NameManager.Strategy {
     /**
      * @return The servers prefix
      */
@@ -18,6 +16,7 @@ public class SignShopNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 
     /**
      * Apply the prefix to a name
+     *
      * @param name The name to prefix
      * @return The name, prefixed according {@link SignShopNamingStrategy}
      */
@@ -29,18 +28,13 @@ public class SignShopNamingStrategy extends PhysicalNamingStrategyStandardImpl {
     }
 
     @Override
-    public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment context) {
-        return context.getIdentifierHelper().toIdentifier(prefix(logicalName.getText()));
+    public String applyForColumn(String columnName) {
+        // don't prefix columns
+        return columnName;
     }
 
     @Override
-    public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment context) {
-        return context.getIdentifierHelper().toIdentifier(prefix(logicalName.getText()));
-    }
-
-    @Override
-    public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment context) {
-        // Don't prefix the columns
-        return logicalName;
+    public String applyForTable(String tableName) {
+        return prefix(tableName);
     }
 }

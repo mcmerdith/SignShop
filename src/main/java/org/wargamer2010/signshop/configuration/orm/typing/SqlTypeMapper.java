@@ -1,4 +1,4 @@
-package org.wargamer2010.signshop.configuration.orm.typemapping;
+package org.wargamer2010.signshop.configuration.orm.typing;
 
 import java.util.HashMap;
 import java.util.Map;

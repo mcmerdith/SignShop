@@ -3,18 +3,14 @@ package org.wargamer2010.signshop.configuration.storage.database.models;
 import com.zaxxer.hikari.HikariConfig;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
-import org.wargamer2010.signshop.SignShop;
 import org.wargamer2010.signshop.configuration.DataSourceType;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
 import org.wargamer2010.signshop.configuration.orm.annotations.Model;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
-import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.HikariConfigConverter;
+import org.wargamer2010.signshop.configuration.orm.typing.conversion.HikariConfigConverter;
 import org.wargamer2010.signshop.configuration.storage.database.util.DatabaseUtil;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
 import java.util.Properties;
 
 @Model(tableName = "signshop_master")

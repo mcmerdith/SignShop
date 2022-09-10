@@ -1,9 +1,9 @@
 package org.wargamer2010.signshop.configuration.orm;
 
 import org.wargamer2010.signshop.configuration.orm.annotations.*;
-import org.wargamer2010.signshop.configuration.orm.typemapping.ColumnType;
-import org.wargamer2010.signshop.configuration.orm.typemapping.SqlDialect;
-import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.SSAttributeConverter;
+import org.wargamer2010.signshop.configuration.orm.typing.ColumnType;
+import org.wargamer2010.signshop.configuration.orm.typing.SqlDialect;
+import org.wargamer2010.signshop.configuration.orm.typing.conversion.SSAttributeConverter;
 import org.wargamer2010.signshop.util.SignShopLogger;
 import org.wargamer2010.signshop.util.StringUtils;
 

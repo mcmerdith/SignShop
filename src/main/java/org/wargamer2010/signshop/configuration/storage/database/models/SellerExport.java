@@ -13,7 +13,6 @@ public class SellerExport {
     @Id(autoIncrement = true)
     private Long id;
 
-    @OneToOne(otherColumnName = "id")
     @Column(name = "seller_id")
     private Seller seller;
 
@@ -25,7 +24,7 @@ public class SellerExport {
     @Column(name = "export_activatables")
     private List<String> activatables;
 
-    @ManyToOne()
+    @ElementCollection()
     @Column(name = "export_items")
     private List<String> items;
 

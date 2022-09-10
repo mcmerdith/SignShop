@@ -1,6 +1,6 @@
 package org.wargamer2010.signshop.configuration.orm.annotations;
 
-import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.SSAttributeConverter;
+import org.wargamer2010.signshop.configuration.orm.typing.conversion.SSAttributeConverter;
 
 import java.lang.annotation.*;
 

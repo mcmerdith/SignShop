@@ -11,7 +11,7 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
-import org.wargamer2010.signshop.configuration.orm.typemapping.conversion.HikariConfigConverter;
+import org.wargamer2010.signshop.configuration.orm.typing.conversion.HikariConfigConverter;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
 import org.wargamer2010.signshop.configuration.storage.YMLDataSource;
 import org.wargamer2010.signshop.configuration.storage.database.InternalDatabase;
