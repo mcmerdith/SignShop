@@ -1,6 +1,7 @@
-package org.wargamer2010.signshop.configuration.orm.typing.conversion;
+package org.wargamer2010.signshop.configuration.storage.database.conversion;
 
 import com.zaxxer.hikari.HikariConfig;
+import org.wargamer2010.signshop.configuration.orm.typing.SSAttributeConverter;
 
 import java.util.ArrayList;
 import java.util.List;

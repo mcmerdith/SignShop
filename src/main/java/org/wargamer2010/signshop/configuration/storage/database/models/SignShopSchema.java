@@ -1,17 +1,13 @@
 package org.wargamer2010.signshop.configuration.storage.database.models;
 
 import com.zaxxer.hikari.HikariConfig;
-import jakarta.persistence.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.wargamer2010.signshop.configuration.DataSourceType;
 import org.wargamer2010.signshop.configuration.SignShopConfig;
-import org.wargamer2010.signshop.configuration.orm.annotations.Model;
+import org.wargamer2010.signshop.configuration.orm.annotations.*;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
-import org.wargamer2010.signshop.configuration.orm.typing.conversion.HikariConfigConverter;
+import org.wargamer2010.signshop.configuration.storage.database.conversion.HikariConfigConverter;
 import org.wargamer2010.signshop.configuration.storage.database.util.DatabaseUtil;
 import org.wargamer2010.signshop.util.SignShopLogger;
-
-import java.util.Properties;
 
 @Model(tableName = "signshop_master")
 public class SignShopSchema {
@@ -19,36 +15,30 @@ public class SignShopSchema {
     Fields
      */
 
-    @Id
-    @GeneratedValue(generator = "increment")
-    @GenericGenerator(name = "increment", strategy = "increment")
+    @Id(autoIncrement = true)
     private Long id;
 
     /**
      * Always 'signshop';
      */
-    @Basic(optional = false)
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String plugin = "signshop";
 
     /**
      * The unique name for the server
      */
-    @Basic(optional = false)
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String server;
 
     /**
      * The version of the database that was being used
      */
-    @Basic(optional = false)
+    @Column(nullable = false)
     private Integer databaseVersion;
 
-    @Enumerated(value = EnumType.STRING)
-    @Basic(optional = false)
+    @Column(nullable = false)
     private DataSourceType dataSource;
 
-    @SuppressWarnings("JpaAttributeTypeInspection")
     @Convert(converter = HikariConfigConverter.class)
     private HikariConfig config;
 
@@ -192,12 +182,12 @@ public class SignShopSchema {
     /**
      * Basic information about SignShop and its Storage state
      *
-     * @param server               The identifier for this server
-     * @param databaseVersion      The version of the database being used
-     * @param dataSource           The Storage implementation used last time SignShop was running
-     * @param config The last url that was used to connect to the database
+     * @param server          The identifier for this server
+     * @param databaseVersion The version of the database being used
+     * @param dataSource      The Storage implementation used last time SignShop was running
+     * @param config          The last url that was used to connect to the database
      */
-    public SignShopSchema(String server, int databaseVersion, DataSourceType dataSource, Properties config) {
+    public SignShopSchema(String server, int databaseVersion, DataSourceType dataSource, HikariConfig config) {
         this.server = server;
         this.databaseVersion = databaseVersion;
         this.dataSource = dataSource;

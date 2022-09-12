@@ -8,7 +8,10 @@ import org.wargamer2010.signshop.blocks.SignShopBooks;
 import org.wargamer2010.signshop.blocks.SignShopItemMeta;
 import org.wargamer2010.signshop.configuration.orm.annotations.*;
 import org.wargamer2010.signshop.configuration.orm.typing.SqlType;
-import org.wargamer2010.signshop.configuration.orm.typing.conversion.SignShopPlayerConverter;
+import org.wargamer2010.signshop.configuration.storage.database.conversion.ItemStackConverter;
+import org.wargamer2010.signshop.configuration.storage.database.conversion.LazyLocationConverter;
+import org.wargamer2010.signshop.configuration.storage.database.conversion.MapConverter;
+import org.wargamer2010.signshop.configuration.storage.database.conversion.SignShopPlayerConverter;
 import org.wargamer2010.signshop.configuration.storage.database.models.SellerExport;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 import org.wargamer2010.signshop.player.PlayerCache;
@@ -28,45 +31,35 @@ public class Seller {
     Database specific stuff
      */
 
-//    @Id
-//    @GeneratedValue(generator = "increment")
-//    @GenericGenerator(name = "increment", strategy = "increment")
     @Id(autoIncrement = true)
-    @Column
     private Long id;
 
+    @ForeignKey
     private SellerExport export;
 
     /*
     Seller class
      */
 
-//    @ElementCollection
-//    @Fetch(FetchMode.JOIN)
-//    @Convert(converter = LazyLocationConverter.class)
+    @ElementCollection(valueColumnName = "containable")
+    @Convert(converter = LazyLocationConverter.class)
     private List<LazyLocation> containables;
 
-//    @ElementCollection
-//    @Fetch(FetchMode.JOIN)
-//    @Convert(converter = LazyLocationConverter.class)
+    @ElementCollection(valueColumnName = "activatable")
+    @Convert(converter = LazyLocationConverter.class)
     private List<LazyLocation> activatables;
 
-//    @Lob
-//    @Convert(converter = ItemStackConverter.class)
-//    @Column(name = "items", columnDefinition = "BLOB")
+    @ElementCollection(valueColumnName = "item")
+    @Convert(converter = ItemStackConverter.class)
     @Column(name = "items", definition = SqlType.BLOB)
     private ItemStack[] isItems;
 
-//    @Column(name = "sign", unique = true)
-//    @Basic(optional = false)
-//    @Convert(converter = LazyLocationConverter.class)
-    @Column(name = "sign", definition = "varchar(255)")
+    @Convert(converter = LazyLocationConverter.class)
+    @Column(name = "sign", nullable = false, unique = true)
     private LazyLocation signLocation;
 
-//    @Lob
-//    @Convert(converter = MapConverter.class)
-//    @Column(columnDefinition = "VARCHAR(10000)")
-    @Column(name = "miscProps", definition = "varchar(10000)")
+    @ElementCollection(valueColumnName = "property")
+    @Convert(converter = MapConverter.class)
     private Map<String, String> miscProps = new HashMap<>();
 
     @Transient
@@ -76,10 +69,10 @@ public class Seller {
     private Map<String, Object> serializedData = new HashMap<>();
 
     @Convert(converter = SignShopPlayerConverter.class)
-    @Column(name = "sign", definition = SqlType.STRING, optional = false)
+    @Column(nullable = false)
     private SignShopPlayer owner;
 
-    @Column(name = "sign", definition = SqlType.STRING, optional = false)
+    @Column(nullable = false)
     private String world;
 
     protected Seller() {

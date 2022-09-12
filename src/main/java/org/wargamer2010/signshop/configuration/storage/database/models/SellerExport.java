@@ -16,15 +16,15 @@ public class SellerExport {
     @Column(name = "seller_id")
     private Seller seller;
 
-    @ManyToOne
+    @ElementCollection(valueColumnName = "export_containable")
     @Column(name = "export_containables")
     private List<String> containables;
 
-    @ManyToOne
+    @ElementCollection(valueColumnName = "export_activatable")
     @Column(name = "export_activatables")
     private List<String> activatables;
 
-    @ElementCollection()
+    @ElementCollection(valueColumnName = "export_item")
     @Column(name = "export_items")
     private List<String> items;
 

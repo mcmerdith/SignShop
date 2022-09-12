@@ -1,8 +1,9 @@
-package org.wargamer2010.signshop.configuration.orm.typing.conversion;
+package org.wargamer2010.signshop.configuration.storage.database.conversion;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.wargamer2010.signshop.configuration.orm.typing.SSAttributeConverter;
 import org.wargamer2010.signshop.util.SignShopLogger;
 
 import java.io.ByteArrayInputStream;

@@ -1,5 +1,6 @@
-package org.wargamer2010.signshop.configuration.orm.typing.conversion;
+package org.wargamer2010.signshop.configuration.storage.database.conversion;
 
+import org.wargamer2010.signshop.configuration.orm.typing.SSAttributeConverter;
 import org.wargamer2010.signshop.configuration.storage.database.util.LazyLocation;
 
 public class LazyLocationConverter implements SSAttributeConverter<LazyLocation, String> {

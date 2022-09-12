@@ -11,7 +11,7 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.wargamer2010.signshop.Seller;
 import org.wargamer2010.signshop.SignShop;
-import org.wargamer2010.signshop.configuration.orm.typing.conversion.HikariConfigConverter;
+import org.wargamer2010.signshop.configuration.storage.database.conversion.HikariConfigConverter;
 import org.wargamer2010.signshop.configuration.storage.DatabaseDataSource;
 import org.wargamer2010.signshop.configuration.storage.YMLDataSource;
 import org.wargamer2010.signshop.configuration.storage.database.InternalDatabase;
@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.*;
 
 public abstract class Storage {

@@ -153,32 +153,10 @@
             <version>4.4</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <!-- Use HikariCP for pooling -->
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>5.0.1</version>
-            <scope>compile</scope>
-        </dependency>
 <!--        <dependency>-->
-<!--            &lt;!&ndash; Use Hibernate to map classes to SQL &ndash;&gt;-->
-<!--            <groupId>org.hibernate.orm</groupId>-->
-<!--            <artifactId>hibernate-core</artifactId>-->
-<!--            <version>6.1.2.Final</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            &lt;!&ndash; Allow Hibernate to use Hikari pools &ndash;&gt;-->
-<!--            <groupId>org.hibernate.orm</groupId>-->
-<!--            <artifactId>hibernate-hikaricp</artifactId>-->
-<!--            <version>6.1.2.Final</version>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            &lt;!&ndash; Hibernate doesn't support SQLite by default so we need to install a dialect &ndash;&gt;-->
-<!--            <groupId>org.hibernate.orm</groupId>-->
-<!--            <artifactId>hibernate-community-dialects</artifactId>-->
-<!--            <version>6.1.2.Final</version>-->
+<!--            <groupId>net.mcmerdith</groupId>-->
+<!--            <artifactId>OrmMicro</artifactId>-->
+<!--            <version>1.0</version>-->
 <!--            <scope>compile</scope>-->
 <!--        </dependency>-->
         <dependency>
@@ -209,19 +187,6 @@
             <version>2.18.0</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Hibernate/Hikari use SLF4J -->
-<!--        <dependency>-->
-<!--            <groupId>org.slf4j</groupId>-->
-<!--            <artifactId>slf4j-api</artifactId>-->
-<!--            <version>2.0.0</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.slf4j</groupId>-->
-<!--            <artifactId>slf4j-reload4j</artifactId>-->
-<!--            <version>2.0.0</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
     </dependencies>
     <build>
         <plugins>
